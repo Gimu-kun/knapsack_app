@@ -1,0 +1,42 @@
+@using Microsoft.AspNetCore.Http.Features
+
+<nav id="sidebar"
+    class="fixed top-16 left-0 h-full bg-gray-800 shadow-xl overflow-y-auto z-20 hidden lg:block sidebar-expanded">
+    <div class="px-2 py-4">
+
+        <div class="text-xs font-semibold uppercase text-gray-400 mb-2 sidebar-text pl-4">MENU</div>
+
+        <div class="space-y-1">
+
+            <a href="/Admin/Dashboard"
+                class="sidebar-item flex items-center p-3 rounded-lg text-white bg-indigo-600 font-semibold transition duration-150 shadow-md">
+                <i class="material-icons text-xl flex-shrink-0 mr-3 transition-none">dashboard</i>
+                <span class="sidebar-text whitespace-nowrap">Bảng điều khiển</span>
+            </a>
+
+            <a href="/Admin/UserManager"
+                class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700 transition duration-150">
+                <i class="material-icons text-xl flex-shrink-0 mr-3 transition-none">people</i>
+                <span class="sidebar-text whitespace-nowrap">Quản lý người dùng</span>
+            </a>
+
+            <a href="/Admin/ChallengeManager"
+                class="sidebar-item flex items-center p-3 rounded-lg text-gray-300 hover:bg-gray-700 transition duration-150">
+                <i class="material-icons text-xl flex-shrink-0 mr-3 transition-none">assignment</i>
+                <span class="sidebar-text whitespace-nowrap">Quản lý đề bài</span>
+            </a>
+
+        </div>
+
+        <div class="text-xs font-semibold uppercase text-gray-400 pt-6 mb-2 sidebar-text pl-4">ACCOUNT</div>
+
+        <form method="post" asp-page="/Admin/Login" asp-page-handler="Logout" class="mt-4">
+            <button type="submit"
+                class="w-full sidebar-item flex items-center p-3 rounded-lg text-red-400 hover:bg-gray-700 transition duration-150">
+                <i class="material-icons text-xl flex-shrink-0 mr-3 transition-none">logout</i>
+                <span class="sidebar-text">Đăng xuất</span>
+            </button>
+        </form>
+
+    </div>
+</nav>

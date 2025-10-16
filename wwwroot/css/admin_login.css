@@ -1,0 +1,42 @@
+@keyframes blob {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(30px, -50px) scale(1.1); }
+        66% { transform: translate(-20px, 20px) scale(0.9); }
+        100% { transform: translate(0, 0) scale(1); }
+    }
+
+    .animate-blob {
+        animation: blob 7s infinite cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+
+    .shadow-inner-dark {
+        box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.6), inset 0 -1px 2px 0 rgba(255, 255, 255, 0.05);
+    }
+
+.shadow-input-light {
+    box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06), 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.animated-gradient {
+    position: absolute;
+    width: 300%;
+    height: 300%;
+    background: linear-gradient(-45deg, #e0c3fc, #8ec5fc, #a6c0fe, #fbc2eb, #cfd9ed); 
+    background-size: 400% 400%;
+    animation: gradient-shift 15s ease infinite;
+}
+
+@keyframes gradient-shift {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}

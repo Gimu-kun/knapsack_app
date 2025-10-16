@@ -1,0 +1,50 @@
+#sidebar,
+#main-content {
+    transition: all 0.3s ease-in-out;
+}
+
+.sidebar-expanded {
+    width: 16rem;
+}
+
+.sidebar-collapsed {
+    width: 4rem;
+}
+
+.content-expanded {
+    margin-left: 16rem;
+}
+
+.content-collapsed {
+    margin-left: 4rem;
+}
+
+#sidebar.sidebar-collapsed .sidebar-item {
+    justify-content: center;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+#sidebar.sidebar-collapsed .sidebar-item i {
+    margin-right: 0 !important;
+}
+
+#sidebar.sidebar-collapsed .sidebar-item span.sidebar-text {
+    display: none;
+}
+
+#sidebar.sidebar-collapsed > div.px-2.py-4 {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+}
+
+#sidebar.sidebar-collapsed > div .sidebar-text, #sidebar.sidebar-collapsed > form .sidebar-text {
+    display: block; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: center;
+    padding-left: 0 !important; 
+}

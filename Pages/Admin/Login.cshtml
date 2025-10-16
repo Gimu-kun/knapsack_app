@@ -1,0 +1,143 @@
+@page
+@model knapsack_app.Pages.Admin.LoginModel
+@{
+    ViewData["Title"] = "Admin Login";
+    Layout = "~/Pages/Shared/_Layout.cshtml";
+}
+
+<div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
+
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="animated-gradient"></div>
+    </div>
+
+    <div
+        class="w-full max-w-sm bg-white p-8 rounded-2xl shadow-3xl space-y-8 z-10 border border-gray-100 transition-all duration-300">
+
+        <h2 class="text-3xl font-bold text-gray-900 text-center tracking-wide">
+            Quản trị viên <br /> đăng nhập
+        </h2>
+        <p class="text-center text-gray-500 -mt-3 text-sm">
+            Truy cập hệ thống quản trị nội bộ.
+        </p>
+
+        <form method="post" class="space-y-6">
+            @Html.AntiForgeryToken()
+
+            <div>
+                <label for="LoginRequest_Account"
+                    class="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">Tài khoản</label>
+                <div class="relative mt-1 rounded-lg shadow-input-light">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                    </div>
+                    <input asp-for="LoginRequest.Account" id="LoginRequest_Account" type="text" required
+                        placeholder="Nhập tên tài khoản"
+                        class="pl-10 pr-3 py-2 block w-full bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ease-in-out sm:text-sm" />
+                </div>
+                <span asp-validation-for="LoginRequest.Account" class="mt-2 text-red-600 text-xs block"></span>
+            </div>
+
+            <div>
+                <label for="LoginRequest_Passwords"
+                    class="block text-xs font-medium text-gray-600 uppercase tracking-wider mb-1">Mật khẩu</label>
+                <div class="relative mt-1 rounded-lg shadow-input-light">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
+                    <input asp-for="LoginRequest.Passwords" id="LoginRequest_Passwords" type="password" required
+                        placeholder="Nhập mật khẩu"
+                        class="pl-10 pr-3 py-2 block w-full bg-gray-50 border border-gray-200 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition duration-150 ease-in-out sm:text-sm" />
+                </div>
+                <span asp-validation-for="LoginRequest.Passwords" class="mt-2 text-red-600 text-xs block"></span>
+            </div>
+
+            <div class="pt-2 flex justify-center">
+                <button type="submit"
+                    class="relative group w-full max-w-xs inline-block p-px font-semibold leading-6 text-white bg-gray-800 shadow-xl cursor-pointer rounded-lg transition-transform duration-300 ease-in-out hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 focus:ring-offset-white">
+                    <span
+                        class="absolute inset-0 rounded-lg bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-[2px] opacity-0 transition-opacity duration-500 group-hover:opacity-100"></span>
+
+                    <span
+                        class="relative z-10 block px-6 py-3 rounded-lg bg-gray-900/90 hover:bg-gray-800 transition duration-300">
+                        <div class="relative z-10 flex items-center justify-center space-x-2">
+                            <span
+                                class="transition-all duration-500 group-hover:translate-x-0.5 font-bold text-base">Đăng
+                                nhập Hệ thống</span>
+                            <svg class="w-5 h-5 transition-transform duration-500 group-hover:translate-x-0.5"
+                                data-slot="icon" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path clip-rule="evenodd"
+                                    d="M8.22 5.22a.75.75.0 0 1 1.06 0l4.25 4.25a.75.75.0 0 1 0 1.06l-4.25 4.25a.75.75.0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75.0 0 1 0-1.06Z"
+                                    fill-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                    </span>
+                </button>
+            </div>
+        </form>
+
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-sm text-center flex items-center justify-center space-x-2"
+                role="alert">
+                <svg class="h-5 w-5 text-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"
+                    aria-hidden="true">
+                    <path fill-rule="evenodd"
+                        d="M8.257 3.099c.765-1.36 2.722-1.36 3.487 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                        clip-rule="evenodd" />
+                </svg>
+                <span>@Model.ErrorMessage</span>
+            </div>
+        }
+    </div>
+</div>
+
+<partial name="_FullScreenLoadingOverlay" />
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form');
+            const loginButton = document.getElementById('login-button');
+            const fullScreenLoader = document.getElementById('full-screen-loader');
+
+            if (form && loginButton && fullScreenLoader) {
+
+                function startLoading() {
+                    loginButton.disabled = true;
+                    fullScreenLoader.classList.remove('hidden');
+                }
+
+                function stopLoading() {
+                    loginButton.disabled = false;
+                    fullScreenLoader.classList.add('hidden');
+                }
+
+                loginButton.addEventListener('click', function (event) {
+                    startLoading(); 
+                    if (form.checkValidity() === false) {
+                        event.preventDefault(); 
+                        stopLoading(); 
+                        form.reportValidity();
+                        return;
+                    }
+                });
+                if ('@Model.ErrorMessage' !== '') {
+                    stopLoading(); 
+                }
+            }
+        });
+    </script>
+}
+}

@@ -1,0 +1,292 @@
+@page
+@model knapsack_app.Pages.Admin.UserManagerModel
+@{
+    ViewData["Title"] = "Quản Lý Người Dùng";
+    Layout = "~/Pages/Shared/_Admin_Layout.cshtml"; 
+}
+
+<div class="mb-6">
+    <h1 class="text-xl font-semibold text-gray-800">Quản Lý Người Dùng</h1>
+    <p class="text-sm text-gray-500">Admin / <span class="text-gray-700">Người Dùng Hệ Thống</span></p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow-lg border border-gray-100">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4 space-y-3 md:space-y-0">
+        
+        <form method="get" id="search-form" class="w-full md:w-80">
+            <label for="search-input" class="sr-only">Tìm kiếm</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" asp-for="SearchTerm" id="search-input" placeholder="Tìm theo ID hoặc Tài khoản..."
+                       class="pl-10 pr-4 py-2 block w-full border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+            <input type="hidden" asp-for="PageIndex" />
+        </form>
+
+        <div class="md:w-auto"></div> 
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">@TempData["SuccessMessage"]</span>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">@TempData["ErrorMessage"]</span>
+        </div>
+    }
+
+    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tài khoản</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng thái</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lần chơi</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lần đăng nhập</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Đăng nhập cuối</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-100">
+                @if (Model.Users.Any())
+                {
+                    var startIndex = (Model.PageIndex - 1) * Model.PageSize;
+                    @foreach (var user in Model.Users)
+                    {
+                        var statusClass = user.Status ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+                        var statusText = user.Status ? "Hoạt động" : "Bị khóa";
+
+                        <tr>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@(startIndex + Model.Users.IndexOf(user) + 1)</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">@user.Id</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-indigo-600">@user.Account</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold @statusClass">
+                                    @statusText
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@user.TotalChallengesTaken</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@user.TotalLogins</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@(user.LastLogin.HasValue ? user.LastLogin.Value.ToString("dd/MM/yyyy HH:mm") : "N/A")</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                <button type="button" 
+                                        onclick="showHistory('@user.Id', '@user.Account')"
+                                        class="text-blue-600 hover:text-blue-900 font-medium">Lịch sử Chơi</button>
+                                
+                                <a asp-page-handler="Delete" asp-route-id="@user.Id" class="text-red-600 hover:text-red-900" 
+                                    onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng @user.Account không?')">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="px-4 py-6 text-center text-gray-500 text-sm">Không tìm thấy người dùng nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    @if (Model.TotalPages > 0)
+    {
+        <div class="mt-4 flex justify-between items-center">
+            <p class="text-sm text-gray-600">
+                Hiển thị @(Model.Users.Count) người dùng trên trang (@(Model.PageIndex) / @Model.TotalPages)
+            </p>
+            <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
+                @{
+                    var prevDisabled = Model.PageIndex <= 1 ? "cursor-not-allowed opacity-50" : "";
+                    var nextDisabled = Model.PageIndex >= Model.TotalPages ? "cursor-not-allowed opacity-50" : "";
+                }
+                
+                <a asp-page="./UserManager" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-searchTerm="@Model.SearchTerm"
+                   class="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 transition @prevDisabled">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    Trước
+                </a>
+
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    var activeClass = i == Model.PageIndex ? "z-10 bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100";
+                    <a asp-page="./UserManager" asp-route-pageIndex="@i" asp-route-searchTerm="@Model.SearchTerm"
+                       class="relative inline-flex items-center px-4 py-2 border text-sm font-medium transition @activeClass">
+                        @i
+                    </a>
+                }
+                
+                <a asp-page="./UserManager" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-searchTerm="@Model.SearchTerm"
+                   class="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 transition @nextDisabled">
+                    Sau
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                </a>
+            </nav>
+        </div>
+    }
+</div>
+
+<div id="historyModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-history" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+            
+            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div class="sm:flex sm:items-start">
+                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                        <h3 class="text-xl leading-6 font-medium text-gray-900" id="modal-title-history">
+                            Lịch sử Chơi của: <span id="history-account-name" class="font-bold text-blue-600"></span>
+                        </h3>
+                        
+                        <div class="mt-4 overflow-y-auto max-h-96">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50 sticky top-0">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Màn chơi</th> 
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Độ khó</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian (giây)</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm đạt được</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời điểm chơi</th>
+                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kết quả</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="history-table-body" class="bg-white divide-y divide-gray-100">
+                                    <tr id="history-loading-row">
+                                        <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">Đang tải lịch sử chơi...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <p id="history-no-data" class="mt-4 text-sm text-gray-500 hidden">Người dùng này chưa có lịch sử chơi nào.</p>
+
+                    </div>
+                </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button type="button" onclick="closeHistoryModal()"
+                        class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                    Đóng
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('search-input');
+            const searchForm = document.getElementById('search-form');
+            let debounceTimer;
+
+            if (searchInput && searchForm) {
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        document.querySelector('[name="PageIndex"]').value = 1; 
+                        searchForm.submit();
+                    }, 500);
+                });
+            }
+        });
+
+        const modal = document.getElementById('historyModal');
+        const historyTableBody = document.getElementById('history-table-body');
+        const historyNoData = document.getElementById('history-no-data');
+        const loadingRow = document.getElementById('history-loading-row');
+
+        function showHistory(userId, accountName) {
+            document.getElementById('history-account-name').innerText = accountName;
+
+            historyNoData.classList.add('hidden');
+            loadingRow.classList.remove('hidden');
+            historyTableBody.innerHTML = '';
+            historyTableBody.appendChild(loadingRow);
+
+            modal.classList.remove('hidden');
+            fetch(`/Admin/UserManager?handler=PlayHistory&userId=${userId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Lỗi tải dữ liệu. Mã: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingRow.classList.add('hidden');
+                    historyTableBody.innerHTML = '';
+
+                    if (data && data.length > 0) {
+                        data.forEach(item => {
+                            const row = createHistoryRow(item);
+                            historyTableBody.appendChild(row);
+                        });
+                    } else {
+                        historyNoData.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải lịch sử chơi:', error);
+                    loadingRow.classList.add('hidden');
+                    historyTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center text-sm text-red-500">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
+                    historyNoData.classList.add('hidden');
+                });
+        }
+
+        function getVietnameseDifficulty(difficulty) {
+            switch (difficulty) {
+                case 1:
+                    return 'Dễ';
+                case 2:
+                    return 'Trung Bình';
+                case 3:
+                    return 'Khó';
+                default:
+                    return difficulty;
+            }
+        }
+
+        function createHistoryRow(item) {
+            const tr = document.createElement('tr');
+
+            const difficultyVietnamese = getVietnameseDifficulty(item.challengeDifficulty);
+
+            const resultClass = item.takenScore > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+            const resultText = item.takenScore > 0 ? 'Hoàn thành' : 'Chưa hoàn thành';
+            
+            tr.innerHTML = `
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-900">${item.challengeId}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-blue-600">${difficultyVietnamese}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${item.takenDuration} giây</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${item.takenScore} điểm</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">${new Date(item.takenAt).toLocaleString()}</td>
+                <td class="px-4 py-3 whitespace-nowrap text-sm">
+                    <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold ${resultClass}">
+                        ${resultText}
+                    </span>
+                </td>
+            `;
+            return tr;
+        }
+
+        function closeHistoryModal() {
+            modal.classList.add('hidden');
+        }
+    </script>
+}

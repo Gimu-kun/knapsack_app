@@ -1,0 +1,292 @@
+@page
+@model knapsack_app.Pages.Dashboard.DashBoardModel
+@{
+    ViewData["Title"] = "E-commerce Dashboard Template";
+    // Đảm bảo Layout này tồn tại và chứa cấu trúc Sidebar/Content chính
+    Layout = "~/Pages/Shared/_Admin_Layout.cshtml"; 
+}
+
+<div class="mb-6">
+    <h1 class="text-xl font-semibold text-gray-800">E-commerce Dashboard Template</h1>
+    <p class="text-sm text-gray-500">Dashboard / <span class="text-gray-700">E-commerce Dashboard Template</span></p>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    
+    <div class="bg-white p-5 rounded-lg shadow-lg border border-gray-100">
+        <h3 class="text-sm font-medium text-gray-500 mb-2">Total Revenue</h3>
+        <div class="flex items-end justify-between">
+            <p class="text-3xl font-bold text-gray-900">$12099</p>
+            <span class="text-sm text-green-500 font-semibold flex items-center">
+                +5.86%
+                <svg class="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.295a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.183V16.25a.75.75 0 01-.75.75z" clip-rule="evenodd" /></svg>
+            </span>
+        </div>
+        <div class="h-16 mt-3 relative">
+            <canvas id="totalRevenueChart"></canvas> 
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-lg shadow-lg border border-gray-100">
+        <h3 class="text-sm font-medium text-gray-500 mb-2">Affiliate Revenue</h3>
+        <div class="flex items-end justify-between">
+            <p class="text-3xl font-bold text-gray-900">$12099</p>
+            <span class="text-sm text-green-500 font-semibold flex items-center">
+                +5.86%
+                <svg class="w-4 h-4 ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 17a.75.75 0 01-.75-.75V5.612L5.29 9.295a.75.75 0 01-1.08-1.04l5.25-5.5a.75.75 0 011.08 0l5.25 5.5a.75.75 0 11-1.08 1.04l-3.96-4.183V16.25a.75.75 0 01-.75.75z" clip-rule="evenodd" /></svg>
+            </span>
+        </div>
+        <div class="h-16 mt-3 relative">
+            <canvas id="affiliateRevenueChart"></canvas> 
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-lg shadow-lg border border-gray-100">
+        <h3 class="text-sm font-medium text-gray-500 mb-2">Refunds</h3>
+        <div class="flex items-end justify-between">
+            <p class="text-3xl font-bold text-gray-900">0.00</p>
+            <span class="text-sm text-gray-400 font-semibold">
+                N/A
+            </span>
+        </div>
+        <div class="h-16 mt-3 relative">
+            <canvas id="refundsChart"></canvas> 
+        </div>
+    </div>
+
+    <div class="bg-white p-5 rounded-lg shadow-lg border border-gray-100">
+        <h3 class="text-sm font-medium text-gray-500 mb-2">Avg. Revenue Per User</h3>
+        <div class="flex items-end justify-between">
+            <p class="text-3xl font-bold text-gray-900">$28000</p>
+            <span class="text-sm text-gray-400 font-semibold">
+                N/A
+            </span>
+        </div>
+        <div class="h-16 mt-3 bg-gray-50 rounded-md flex items-center justify-center text-gray-400 text-xs">
+            [Không có biểu đồ]
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow-lg border border-gray-100">
+        <h2 class="text-lg font-semibold text-gray-800 mb-4">Recent Orders</h2>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Name</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product Id</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Time</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">1</td>
+                        <td class="px-3 py-4 whitespace-nowrap"><div class="w-10 h-10 bg-gray-200 rounded"></div></td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Product #1</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">id0000001</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">20</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">$80.00</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">27-08-2019 01:22:12</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Patricia J. King</td>
+                        <td class="px-3 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                                In Transit
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">2</td>
+                        <td class="px-3 py-4 whitespace-nowrap"><div class="w-10 h-10 bg-gray-200 rounded"></div></td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Product #2</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">id0000002</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">12</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">$180.00</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">25-08-2019 21:12:56</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Rachel J. Wicker</td>
+                        <td class="px-3 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                Delivered
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">3</td>
+                        <td class="px-3 py-4 whitespace-nowrap"><div class="w-10 h-10 bg-gray-200 rounded"></div></td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Product #3</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">id0000003</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">23</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">$820.00</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">24-08-2019 14:13:77</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Michael K. Ledford</td>
+                        <td class="px-3 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                Delivered
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">4</td>
+                        <td class="px-3 py-4 whitespace-nowrap"><div class="w-10 h-10 bg-gray-200 rounded"></div></td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Product #4</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">id0000004</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">34</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">$340.00</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-500">23-08-2019 09:12:35</td>
+                        <td class="px-3 py-4 whitespace-nowrap text-sm text-gray-900">Michael K. Ledford</td>
+                        <td class="px-3 py-4 whitespace-nowrap">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                Delivered
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="text-right mt-4">
+            <a href="#" class="text-sm font-semibold text-indigo-600 hover:text-indigo-700">View Details</a>
+        </div>
+    </div>
+    
+    <div class="lg:col-span-1 space-y-6">
+        
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Customer Acquisition</h2>
+            <div class="h-64 relative">
+                <canvas id="customerAcquisitionChart"></canvas> 
+            </div>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow-lg border border-gray-100">
+            <h2 class="text-lg font-semibold text-gray-800 mb-4">Product Category</h2>
+            <div class="h-48 relative">
+                <canvas id="productCategoryChart"></canvas> 
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Thiết lập mặc định cho Chart.js để tối ưu hiển thị
+            Chart.defaults.maintainAspectRatio = false;
+            Chart.defaults.responsive = true;
+
+            // Dữ liệu giả định
+            const dataLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            
+            // ==========================================================
+            // 1. BIỂU ĐỒ MINI (Total Revenue, Affiliate, Refunds)
+            // ==========================================================
+
+            function createMiniLineChart(id, data, color) {
+                const ctx = document.getElementById(id);
+                if (!ctx) return;
+                
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: dataLabels,
+                        datasets: [{
+                            data: data,
+                            borderColor: color,
+                            backgroundColor: 'rgba(0, 0, 0, 0)', 
+                            borderWidth: 2,
+                            tension: 0.4, 
+                            pointRadius: 0, 
+                            fill: true, 
+                            backgroundColor: color.replace(')', ', 0.1)'), 
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                        scales: { x: { display: false }, y: { display: false } },
+                        elements: { line: { borderWidth: 2 } },
+                    }
+                });
+            }
+
+            // Khởi tạo Mini Charts
+            createMiniLineChart('totalRevenueChart', [12, 19, 3, 5, 2, 3, 15], 'rgb(79, 70, 229)'); // Indigo
+            createMiniLineChart('affiliateRevenueChart', [15, 20, 10, 8, 12, 18, 5], 'rgb(236, 72, 153)'); // Pink
+            createMiniLineChart('refundsChart', [5, 12, 1, 9, 7, 2, 11], 'rgb(6, 182, 212)'); // Cyan
+            
+            // ==========================================================
+            // 2. BIỂU ĐỒ LỚN (Customer Acquisition) - Biểu đồ Đường đôi
+            // ==========================================================
+            const acqCtx = document.getElementById('customerAcquisitionChart');
+            if(acqCtx) {
+                new Chart(acqCtx, {
+                    type: 'line',
+                    data: {
+                        labels: dataLabels,
+                        datasets: [
+                            {
+                                label: 'Returning',
+                                data: [8, 7, 6, 8, 7, 9, 8],
+                                borderColor: 'rgb(236, 72, 153)',
+                                backgroundColor: 'rgb(236, 72, 153, 0.2)',
+                                tension: 0.4,
+                                fill: true,
+                            },
+                            {
+                                label: 'First Time',
+                                data: [6, 5, 4, 7, 5, 8, 6],
+                                borderColor: 'rgb(79, 70, 229)',
+                                backgroundColor: 'rgb(79, 70, 229, 0.2)',
+                                tension: 0.4,
+                                fill: true,
+                            }
+                        ]
+                    },
+                    options: {
+                        plugins: { legend: { position: 'bottom' } },
+                        scales: { x: { grid: { display: false } }, y: { beginAtZero: true } }
+                    }
+                });
+            }
+
+
+            // ==========================================================
+            // 3. BIỂU ĐỒ TRÒN (Product Category)
+            // ==========================================================
+            const pieCtx = document.getElementById('productCategoryChart');
+            if(pieCtx) {
+                new Chart(pieCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Electronics', 'Clothing', 'Books', 'Home Goods'],
+                        datasets: [{
+                            data: [45, 30, 15, 10], // Tỷ lệ %
+                            backgroundColor: [
+                                'rgb(79, 70, 229)', // Indigo
+                                'rgb(236, 72, 153)', // Pink
+                                'rgb(6, 182, 212)', // Cyan
+                                'rgb(34, 197, 94)' // Green
+                            ],
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        plugins: { legend: { position: 'right' } }
+                    }
+                });
+            }
+        });
+    </script>
+}

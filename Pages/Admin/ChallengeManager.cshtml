@@ -1,0 +1,566 @@
+@page
+@model knapsack_app.Pages.Admin.ChallengeManagerModel
+@{
+    ViewData["Title"] = "Quản Lý Đề Bài";
+    Layout = "~/Pages/Shared/_Admin_Layout.cshtml"; 
+}
+
+<div class="mb-6">
+    <h1 class="text-xl font-semibold text-gray-800">Quản Lý Đề Bài</h1>
+    <p class="text-sm text-gray-500">Admin / <span class="text-gray-700">Đề Bài Knapsack</span></p>
+</div>
+
+<div class="bg-white p-6 rounded-lg shadow-lg border border-gray-100">
+    
+    <div class="flex flex-col md:flex-row justify-between items-center mb-4 space-y-3 md:space-y-0">
+        
+        <form method="get" id="search-form" class="w-full md:w-80">
+            <label for="search-input" class="sr-only">Tìm kiếm</label>
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                </div>
+                <input type="text" asp-for="SearchTerm" id="search-input" placeholder="Tìm theo ID hoặc Độ khó..."
+                       class="pl-10 pr-4 py-2 block w-full border border-gray-300 rounded-lg text-sm placeholder-gray-500 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+            <input type="hidden" asp-for="PageIndex" />
+            <input type="hidden" asp-for="PageSize" />
+        </form>
+
+        <div class="md:w-auto">
+            <button type="button" onclick="showEditModal(null)"
+                    class="w-full md:w-auto flex items-center justify-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition">
+                <svg class="h-5 w-5 mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" /></svg>
+                Tạo Đề Bài Mới
+            </button>
+        </div> 
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">@TempData["SuccessMessage"]</span>
+        </div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">@TempData["ErrorMessage"]</span>
+        </div>
+    }
+
+    <div class="overflow-x-auto border border-gray-200 rounded-lg">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Độ khó</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dung lượng W</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian T (giây)</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lỗ hổng</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày tạo</th>
+                    <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Người tạo</th>
+                    <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="challenge-table-body" class="bg-white divide-y divide-gray-100">
+                @if (Model.Challenges.Any())
+                {
+                    var startIndex = (Model.PageIndex - 1) * Model.PageSize;
+                    @foreach (var challenge in Model.Challenges)
+                    {
+                        var difficultyText = GetVietnameseDifficulty((int)challenge.Difficulty);
+                        var difficultyClass = GetDifficultyClass((int)challenge.Difficulty);
+                        
+                        <tr>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@(startIndex + Model.Challenges.ToList().IndexOf(challenge) + 1)</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">@challenge.Id</td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold @difficultyClass">
+                                    @difficultyText
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@challenge.MaxCapacity</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@challenge.MaxDuration</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@challenge.MissCount</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@challenge.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-indigo-600">@challenge.CreatedBy</td>
+                            <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                <button type="button" 
+                                        onclick="showEditModal('@challenge.Id')"
+                                        class="text-blue-600 hover:text-blue-900 font-medium">Sửa</button>
+                                
+                                <a asp-page-handler="Delete" asp-route-id="@challenge.Id" class="text-red-600 hover:text-red-900" 
+                                   onclick="return confirm('Bạn có chắc chắn muốn xóa đề bài @challenge.Id không? Thao tác này KHÔNG thể hoàn tác!')">Xóa</a>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="9" class="px-4 py-6 text-center text-gray-500 text-sm">Không tìm thấy đề bài nào.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    
+    @* Phần Phân trang (Giữ nguyên) *@
+    @if (Model.TotalPages > 0)
+    {
+        <div class="mt-4 flex justify-between items-center">
+            <p class="text-sm text-gray-600">
+                Hiển thị @(Model.Challenges.Count()) đề bài trên trang (@(Model.PageIndex) / @Model.TotalPages)
+            </p>
+            <nav class="relative z-0 inline-flex rounded-lg shadow-sm -space-x-px" aria-label="Pagination">
+                @{
+                    var prevDisabled = Model.PageIndex <= 1 ? "cursor-not-allowed opacity-50" : "";
+                    var nextDisabled = Model.PageIndex >= Model.TotalPages ? "cursor-not-allowed opacity-50" : "";
+                }
+                
+                <a asp-page="./ChallengeManager" asp-route-pageIndex="@(Model.PageIndex - 1)" asp-route-searchTerm="@Model.SearchTerm"
+                   class="relative inline-flex items-center px-3 py-2 rounded-l-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 transition @prevDisabled">
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
+                    Trước
+                </a>
+
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    if (i == Model.PageIndex || i == 1 || i == Model.TotalPages || (i >= Model.PageIndex - 1 && i <= Model.PageIndex + 1))
+                    {
+                        var activeClass = i == Model.PageIndex ? "z-10 bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700" : "bg-white border-gray-300 text-gray-700 hover:bg-gray-100";
+                        <a asp-page="./ChallengeManager" asp-route-pageIndex="@i" asp-route-searchTerm="@Model.SearchTerm"
+                           class="relative inline-flex items-center px-4 py-2 border text-sm font-medium transition @activeClass">
+                            @i
+                        </a>
+                    }
+                    else if (i == 2 || i == Model.TotalPages - 1)
+                    {
+                        <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">...</span>
+                    }
+                }
+                
+                <a asp-page="./ChallengeManager" asp-route-pageIndex="@(Model.PageIndex + 1)" asp-route-searchTerm="@Model.SearchTerm"
+                   class="relative inline-flex items-center px-3 py-2 rounded-r-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 transition @nextDisabled">
+                    Sau
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
+                </a>
+            </nav>
+        </div>
+    }
+</div>
+
+@* --- Modal Thêm/Sửa Đề Bài (Điều chỉnh) --- *@
+<div id="editChallengeModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
+
+        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+            
+            <form id="challenge-form">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-xl leading-6 font-medium text-gray-900" id="modal-title-edit">
+                                Tạo Đề Bài Mới
+                            </h3>
+                            <p class="text-sm text-red-500 hidden" id="form-error-message"></p>
+                            
+                            <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-6 sm:grid-cols-6">
+                                
+                                <input type="hidden" id="challenge-is-edit" value="false" />
+                                <input type="hidden" id="challenge-id-edit" name="Id" /> @* Chỉ dùng để lưu ID khi EDIT *@
+                                
+                                <div class="sm:col-span-3">
+                                    <label for="challenge-difficulty" class="block text-sm font-medium text-gray-700">Độ Khó</label>
+                                    <select id="challenge-difficulty" name="Difficulty" required
+                                            class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                        <option value="1">1 - Dễ</option>
+                                        <option value="2">2 - Trung Bình</option>
+                                        <option value="3">3 - Khó</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="sm:col-span-3">
+                                    <label for="challenge-capacity" class="block text-sm font-medium text-gray-700">Dung lượng Tối đa (W)</label>
+                                    <input type="number" id="challenge-capacity" name="MaxCapacity" required min="1"
+                                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+
+                                <div class="sm:col-span-3">
+                                    <label for="challenge-duration" class="block text-sm font-medium text-gray-700">Thời gian (Giây)</label>
+                                    <input type="number" id="challenge-duration" name="MaxDuration" required min="1" value="3000"
+                                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                
+                                <div class="sm:col-span-3">
+                                    <label for="challenge-misscount" class="block text-sm font-medium text-gray-700">Số lỗ hổng (Max)</label>
+                                    <input type="number" id="challenge-misscount" name="MissCount" required min="0"
+                                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                </div>
+                                
+                                @* --- Khu vực Vật phẩm Động --- *@
+                                <div class="sm:col-span-6 border-t pt-4 mt-2">
+                                    <h4 class="text-md font-semibold text-gray-800 mb-2 flex justify-between items-center">
+                                        Dữ liệu Vật phẩm 
+                                        <button type="button" id="addItemButton" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition disabled:opacity-50">
+                                            + Thêm Vật Phẩm
+                                        </button>
+                                    </h4>
+                                    <div id="itemsContainer" class="space-y-3">
+                                        @* Các vật phẩm sẽ được thêm bằng JavaScript *@
+                                    </div>
+                                    <p id="itemCountMessage" class="mt-2 text-xs text-gray-500">Tối đa 15 vật phẩm.</p>
+                                </div>
+                                <input type="hidden" id="challenge-quesdata-json" name="QuesDataJson" />
+
+                                @* Các trường ẩn cho dữ liệu đã được tính toán (chỉ cần cho PUT) *@
+                                <input type="hidden" id="challenge-dpboard" name="DpBoardJson" />
+                                <input type="hidden" id="challenge-resultitems" name="ResultItemsJson" />
+                                <input type="hidden" id="challenge-missarray" name="MissArrayJson" />
+                                
+                                @* Không cần trường CreatedBy/UpdatedBy, Server sẽ tự lấy từ Token/Cookie *@
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="submit" id="save-button"
+                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition">
+                        <span id="save-button-text">Tạo Đề Bài</span>
+                    </button>
+                    <button type="button" onclick="closeEditModal()"
+                            class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition">
+                        Hủy
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // --- CÁC HẰNG SỐ & DOM ELEMENTS ---
+        const MAX_ITEMS = 15;
+        const DEFAULT_ITEMS = 3; // Mặc định 3 vật phẩm
+        const modal = document.getElementById('editChallengeModal');
+        const modalTitle = document.getElementById('modal-title-edit');
+        const saveButton = document.getElementById('save-button-text');
+        const formError = document.getElementById('form-error-message');
+        const isEditInput = document.getElementById('challenge-is-edit');
+        const challengeIdEditInput = document.getElementById('challenge-id-edit');
+        const form = document.getElementById('challenge-form');
+        const itemsContainer = document.getElementById('itemsContainer');
+        const addItemButton = document.getElementById('addItemButton');
+        const quesDataJsonInput = document.getElementById('challenge-quesdata-json');
+        const itemCountMessage = document.getElementById('itemCountMessage');
+
+        // --- Form Fields ---
+        const fields = {
+            Difficulty: document.getElementById('challenge-difficulty'),
+            MaxCapacity: document.getElementById('challenge-capacity'),
+            MaxDuration: document.getElementById('challenge-duration'),
+            MissCount: document.getElementById('challenge-misscount'),
+            DpBoardJson: document.getElementById('challenge-dpboard'),
+            ResultItemsJson: document.getElementById('challenge-resultitems'),
+            MissArrayJson: document.getElementById('challenge-missarray'),
+        };
+
+        // --- Helper Functions ---
+        function getVietnameseDifficulty(difficulty) { /* ... */ }
+
+        // --- ITEM MANAGEMENT LOGIC ---
+
+        function updateAddItemButton() {
+            const currentCount = itemsContainer.children.length;
+            const isDisabled = currentCount >= MAX_ITEMS;
+            addItemButton.disabled = isDisabled;
+            addItemButton.classList.toggle('opacity-50', isDisabled);
+            itemCountMessage.innerText = `Hiện tại: ${currentCount}/${MAX_ITEMS} vật phẩm.`;
+        }
+
+        function createItemRow(index, weight = '', value = '', itemId = null) {
+            const row = document.createElement('div');
+            row.className = 'flex space-x-2 items-center item-row';
+            // Lưu ID vật phẩm nếu có (chế độ Sửa)
+            row.dataset.itemId = itemId || ''; 
+            row.dataset.itemIndex = index;
+            
+            // Xóa nút xóa nếu chỉ còn 1 vật phẩm, nhưng ta luôn cho phép xóa
+            // if (itemsContainer.children.length > 0) { ... }
+            
+            row.innerHTML = `
+                <span class="text-sm font-medium text-gray-700 w-8">#${index}</span>
+                <input type="number" placeholder="Trọng lượng (Weight)" value="${weight}" min="1" required
+                       class="item-weight flex-1 border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <input type="number" placeholder="Giá trị (Value)" value="${value}" min="1" required
+                       class="item-value flex-1 border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                <button type="button" class="remove-item-btn text-red-600 hover:text-red-800 transition p-2" aria-label="Xóa vật phẩm">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            `;
+
+            row.querySelector('.remove-item-btn').addEventListener('click', () => {
+                row.remove();
+                reindexItems();
+                updateAddItemButton();
+            });
+            
+            return row;
+        }
+        
+        function reindexItems() {
+            Array.from(itemsContainer.children).forEach((row, index) => {
+                const displayIndex = index + 1;
+                row.dataset.itemIndex = displayIndex;
+                row.querySelector('span').innerText = `#${displayIndex}`;
+            });
+        }
+        
+        function initializeItems(itemsData = []) {
+            itemsContainer.innerHTML = '';
+            
+            if (itemsData.length > 0) {
+                // Chế độ Sửa: Thêm vật phẩm đã có
+                itemsData.forEach((item, index) => {
+                    const row = createItemRow(index + 1, item.Weight, item.Value, item.Id);
+                    itemsContainer.appendChild(row);
+                });
+            } else {
+                // Chế độ Tạo mới: Thêm vật phẩm mặc định (3)
+                for (let i = 0; i < DEFAULT_ITEMS; i++) {
+                    const row = createItemRow(i + 1);
+                    itemsContainer.appendChild(row);
+                }
+            }
+            
+            reindexItems();
+            updateAddItemButton();
+        }
+
+        addItemButton.addEventListener('click', () => {
+            if (itemsContainer.children.length < MAX_ITEMS) {
+                const newIndex = itemsContainer.children.length + 1;
+                const newRow = createItemRow(newIndex);
+                itemsContainer.appendChild(newRow);
+                updateAddItemButton();
+            }
+        });
+
+        // --- Modal Control ---
+
+        function closeEditModal() {
+            modal.classList.add('hidden');
+            formError.classList.add('hidden');
+            formError.innerText = '';
+            form.reset();
+            initializeItems([]); // Reset item container về mặc định 3 item
+        }
+        
+        async function showEditModal(challengeId) {
+            form.reset();
+            formError.classList.add('hidden');
+            
+            if (challengeId) {
+                // Chế độ SỬA
+                modalTitle.innerText = 'Chỉnh Sửa Đề Bài';
+                saveButton.innerText = 'Lưu Thay Đổi';
+                isEditInput.value = 'true';
+                challengeIdEditInput.value = challengeId;
+                
+                try {
+                    const response = await fetch(`/api/Challenge/${challengeId}`);
+                    if (!response.ok) throw new Error('Không tải được dữ liệu đề bài.');
+                    const data = await response.json();
+                    
+                    fields.Difficulty.value = data.difficulty;
+                    fields.MaxCapacity.value = data.maxCapacity;
+                    fields.MaxDuration.value = data.maxDuration;
+                    fields.MissCount.value = data.missCount;
+                    
+                    fields.DpBoardJson.value = data.dpBoardJson;
+                    fields.ResultItemsJson.value = data.resultItemsJson;
+                    fields.MissArrayJson.value = data.missArrayJson;
+                    
+                    const itemsData = JSON.parse(data.quesDataJson || '[]');
+                    initializeItems(itemsData); // Khởi tạo với dữ liệu có sẵn
+
+                } catch (error) {
+                    alert('Lỗi: ' + error.message);
+                    closeEditModal();
+                    return;
+                }
+            } else {
+                // Chế độ TẠO MỚI
+                modalTitle.innerText = 'Tạo Đề Bài Mới';
+                saveButton.innerText = 'Tạo Đề Bài';
+                isEditInput.value = 'false';
+                challengeIdEditInput.value = '';
+                initializeItems([]); // Khởi tạo 3 vật phẩm mặc định
+            }
+            modal.classList.remove('hidden');
+        }
+
+        // --- Submit Form (POST/PUT) ---
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            formError.classList.add('hidden');
+            
+            const isEdit = isEditInput.value === 'true';
+            const method = isEdit ? 'PUT' : 'POST';
+            const url = '/api/Challenge';
+            
+            // 1. Thu thập dữ liệu Vật phẩm và tạo QuesDataJson
+            const itemsData = Array.from(itemsContainer.children).map(row => {
+                const weight = row.querySelector('.item-weight').value;
+                const value = row.querySelector('.item-value').value;
+                const itemId = row.dataset.itemId; 
+                
+                return { 
+                    // Gửi ID cũ khi SỬA để Service có thể tái sử dụng/cập nhật
+                    Id: isEdit && itemId ? itemId : null, 
+                    Weight: parseInt(weight), 
+                    Value: parseInt(value) 
+                };
+            });
+            
+            if (itemsData.length === 0) {
+                 displayFormError("Vui lòng thêm ít nhất một vật phẩm.");
+                 return;
+            }
+
+            // Gán JSON vào trường ẩn
+            quesDataJsonInput.value = JSON.stringify(itemsData);
+
+            // 2. Thu thập dữ liệu form và tạo Payload
+            const formData = {
+                // ID chỉ được gửi khi SỬA (PUT)
+                Id: isEdit ? challengeIdEditInput.value : undefined, 
+                difficulty: parseInt(fields.Difficulty.value),
+                maxCapacity: parseInt(fields.MaxCapacity.value),
+                maxDuration: parseInt(fields.MaxDuration.value),
+                missCount: parseInt(fields.MissCount.value),
+                quesDataJson: quesDataJsonInput.value,
+                
+                // Các trường ẩn (chỉ có giá trị khi SỬA)
+                DpBoardJson: isEdit ? fields.DpBoardJson.value : undefined,
+                ResultItemsJson: isEdit ? fields.ResultItemsJson.value : undefined,
+                MissArrayJson: isEdit ? fields.MissArrayJson.value : undefined,
+            };
+            console.log("Chế độ:", isEdit ? "Sửa (PUT)" : "Tạo mới (POST)");
+            console.log("URL:", url);
+            console.log("Phương thức:", method);
+            console.log("Dữ liệu Vật phẩm()Type:",typeof itemsData);
+            console.log("Dữ liệu Vật phẩm:", itemsData);
+            console.log("QuesDataJson:()Type",typeof quesDataJsonInput.value);
+            console.log("QuesDataJson:", quesDataJsonInput.value);
+            console.log("Các trường ẩn (nếu có):", {
+                DpBoardJson: formData.DpBoardJson,
+                ResultItemsJson: formData.ResultItemsJson,
+                MissArrayJson: formData.MissArrayJson
+            });
+            console.log("ID (nếu có):", formData.Id);
+            console.log("MaxCapacity:(Type)",typeof formData.maxCapacity);
+            console.log("MaxCapacity:", formData.maxCapacity);
+            console.log("MaxDuration:(Type)",typeof formData.maxDuration);
+            console.log("MaxDuration:", formData.maxDuration);
+            console.log("MissCount:(Type)",typeof formData.missCount);
+            console.log("MissCount:", formData.missCount);
+            console.log("Difficulty:(Type)",typeof formData.difficulty);
+            console.log("Difficulty:", formData.difficulty);
+            console.log("Payload trước khi gửi:", formData);
+
+            // Lọc bỏ các trường undefined
+            const payload = Object.fromEntries(
+                Object.entries(formData).filter(([_, v]) => v !== undefined)
+            );
+            // 3. Gửi Request
+            try {
+                document.getElementById('save-button').disabled = true;
+                document.getElementById('save-button').classList.add('opacity-50', 'cursor-not-allowed');
+                console.log("Gửi yêu cầu tới:", url, method, payload);
+                const response = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log("Phản hồi nhận được:", response);
+                if (response.ok) {
+                    const message = isEdit ? 'Cập nhật đề bài thành công!' : 'Tạo đề bài thành công!';
+                    alert(message);
+                    window.location.reload(); 
+                } else {
+                    const errorData = await response.json();
+                    const errorMessage = errorData.detail || errorData.Message || errorData.title || `Lỗi Server không xác định (Mã: ${response.status})`;
+                    displayFormError(errorMessage);
+                }
+            } catch (error) {
+                displayFormError(`Lỗi kết nối: ${error.message}`);
+            } finally {
+                document.getElementById('save-button').disabled = false;
+                document.getElementById('save-button').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        });
+        
+        function displayFormError(message) {
+            formError.classList.remove('hidden');
+            formError.innerText = message;
+        }
+
+        // --- Search/Debounce Logic ---
+        document.addEventListener('DOMContentLoaded', function () {
+            const searchInput = document.getElementById('search-input');
+            const searchForm = document.getElementById('search-form');
+            let debounceTimer;
+
+            if (searchInput && searchForm) {
+                searchInput.addEventListener('input', function () {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => {
+                        document.querySelector('[name="PageIndex"]').value = 1; 
+                        searchForm.submit();
+                    }, 500);
+                });
+            }
+            
+            // Khởi tạo form động khi trang tải
+            initializeItems([]);
+        });
+        
+    </script>
+}
+
+@functions {
+    // Hàm này giúp hiển thị độ khó bằng tiếng Việt
+    public string GetVietnameseDifficulty(int difficulty)
+    {
+        return difficulty switch
+        {
+            1 => "Dễ",
+            2 => "Trung Bình",
+            3 => "Khó",
+            _ => "Khác"
+        };
+    }
+
+    // Hàm này giúp tô màu cho độ khó
+    public string GetDifficultyClass(int difficulty)
+    {
+        return difficulty switch
+        {
+            1 => "bg-green-100 text-green-800",
+            2 => "bg-yellow-100 text-yellow-800",
+            3 => "bg-red-100 text-red-800",
+            _ => "bg-gray-100 text-gray-800"
+        };
+    }
+}
