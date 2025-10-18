@@ -1,4 +1,4 @@
-using knapsack_app.Models.Models;
+using knapsack_app.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace knapsack_app.Services
@@ -24,7 +24,8 @@ namespace knapsack_app.Services
                     TakenScore = t.TakenScore,
                     TakenDuration = t.TakenDuration,
                     TakenAt = t.TakenAt,
-                    IsMultiplay = t.IsMultiplay,
+                    TeamName = t.TeamName,
+                    TeamId = t.TeamId,
                     ChallengeDifficulty = t.Challenge.Difficulty,
                 })
                 .ToListAsync();

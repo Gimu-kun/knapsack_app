@@ -5,21 +5,56 @@ using Microsoft.EntityFrameworkCore;
 public class UserService
 {
     private readonly AppDbContext _context;
-
-    public UserService(AppDbContext context)
+    private readonly IWebHostEnvironment _env;
+    private readonly JwtService _jwtService;
+    private readonly PasswordService _passwordService;
+    public UserService(AppDbContext context, IWebHostEnvironment env, JwtService jwtService, PasswordService passwordService)
     {
         _context = context;
+        _env = env;
+        _jwtService = jwtService;
+        _passwordService = passwordService;
     }
 
-    // Tạo user mới
+    // Tạo user mới - Cập nhật logic xử lý file
     public async Task<(bool Success, string Message)> CreateUser(UserCreationReqDto request)
     {
         var existedAcc = _context.User.FirstOrDefault(u => u.Account == request.Account);
         if (existedAcc != null)
             return (false, "Tài khoản đã tồn tại");
 
-        string avatarStr = request.Avatar ?? null;
-        var newUser = new UserModel(request.Account, request.Passwords, avatarStr);
+        string? avatarPath = null;
+        if (request.Avatar != null)
+        {
+            // 1. Tạo tên file duy nhất
+            string fileExtension = Path.GetExtension(request.Avatar.FileName);
+            string uniqueFileName = Guid.NewGuid().ToString() + fileExtension;
+
+            // 2. Xác định thư mục lưu trữ (ví dụ: wwwroot/avatars)
+            string uploadFolder = Path.Combine(_env.WebRootPath, "avatars");
+
+            // Đảm bảo thư mục tồn tại
+            if (!Directory.Exists(uploadFolder))
+            {
+                Directory.CreateDirectory(uploadFolder);
+            }
+
+            // 3. Tạo đường dẫn file đầy đủ
+            string filePath = Path.Combine(uploadFolder, uniqueFileName);
+
+            // 4. Lưu file vật lý
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            {
+                await request.Avatar.CopyToAsync(fileStream);
+            }
+
+            // 5. Lưu đường dẫn tương đối (để truy cập qua URL) vào DB
+            avatarPath = "/avatars/" + uniqueFileName;
+        }
+
+        // Nếu không có file được upload, avatarStr sẽ là null và UserModel sẽ dùng giá trị mặc định.
+        // Nếu có file, avatarStr là đường dẫn tương đối.
+        var newUser = new UserModel(request.Account, _passwordService.hashPassword(request.Passwords), avatarPath);
 
         _context.User.Add(newUser);
         await _context.SaveChangesAsync();
@@ -31,18 +66,18 @@ public class UserService
     {
         // 1. Áp dụng LỌC (Filtering)
         var usersQuery = _context.User.AsQueryable();
-        
+
         if (!string.IsNullOrEmpty(query.SearchTerm))
         {
-            usersQuery = usersQuery.Where(u => 
-                u.Account.Contains(query.SearchTerm) || 
+            usersQuery = usersQuery.Where(u =>
+                u.Account.Contains(query.SearchTerm) ||
                 u.Id.Contains(query.SearchTerm));
         }
 
         // 2. Tính TỔNG SỐ DÒNG và TỔNG SỐ TRANG
         var totalItems = await usersQuery.CountAsync();
         var totalPages = (int)Math.Ceiling(totalItems / (double)query.PageSize);
-        
+
         // Đảm bảo PageIndex hợp lệ
         query.PageIndex = Math.Max(1, Math.Min(query.PageIndex, totalPages > 0 ? totalPages : 1));
 
@@ -78,9 +113,9 @@ public class UserService
             Status = u.Status, // Giả định UserModel.Status là bool/TINYINT
             CreatedAt = u.CreatedAt,
             LastLogin = u.LastLogin, // Lấy LastLogin từ bảng User
-            
+
             // Sẽ được điền sau
-            TotalChallengesTaken = 0, 
+            TotalChallengesTaken = 0,
             TotalLogins = 0
         }).ToListAsync();
 
@@ -136,4 +171,20 @@ public class UserService
         await _context.SaveChangesAsync();
         return (true, "Xóa thành công");
     }
+
+        public async Task<AuthResult> Login(LoginReqDto request)
+    {
+        var user = _context.User.FirstOrDefault(u => u.Account == request.Account);
+            if (user == null)
+            {
+                return new AuthResult { Success = true, Message = "Tài khoản không tồn tại" };
+            }
+
+            if (!_passwordService.verifyPassword(user.Passwords, request.Password))
+            {
+                return new AuthResult { Success = false, Message = "Mật khẩu không đúng." };
+            }
+            
+            return new AuthResult { Success = true, Message = "Đăng nhập thành công.", Token = _jwtService.GenerateToken(user.Id,user.Account,false) };
+        }
 }

@@ -88,7 +88,11 @@
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@challenge.MissCount</td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@challenge.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-indigo-600">@challenge.CreatedBy</td>
+                            
                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                                <button type="button" 
+                                    onclick="showDetailModal('@challenge.Id')"
+                                    class="text-green-600 hover:text-green-900 font-medium">Chi Tiết</button>
                                 <button type="button" 
                                         onclick="showEditModal('@challenge.Id')"
                                         class="text-blue-600 hover:text-blue-900 font-medium">Sửa</button>
@@ -157,100 +161,170 @@
 @* --- Modal Thêm/Sửa Đề Bài (Điều chỉnh) --- *@
 <div id="editChallengeModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
+            <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
 
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
-            
-            <form id="challenge-form">
-                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+                
+                <form id="challenge-form">
+                    <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[80vh] overflow-y-auto">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                                <h3 class="text-xl leading-6 font-medium text-gray-900" id="modal-title-edit">
+                                    Tạo Đề Bài Mới
+                                </h3>
+                                <p class="text-sm text-red-500 hidden" id="form-error-message"></p>
+                                
+                                <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-6 sm:grid-cols-6">
+                                    
+                                    <input type="hidden" id="challenge-is-edit" value="false" />
+                                    <input type="hidden" id="challenge-id-edit" name="Id" />
+                                    
+                                    <div class="sm:col-span-3">
+                                        <label for="challenge-difficulty" class="block text-sm font-medium text-gray-700">Độ Khó</label>
+                                        <select id="challenge-difficulty" name="Difficulty" required
+                                                class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                            <option value="1">1 - Dễ</option>
+                                            <option value="2">2 - Trung Bình</option>
+                                            <option value="3">3 - Khó</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="sm:col-span-3">
+                                        <label for="challenge-capacity" class="block text-sm font-medium text-gray-700">Dung lượng Tối đa (W)</label>
+                                        <input type="number" id="challenge-capacity" name="MaxCapacity" required min="1"
+                                            class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    </div>
+
+                                    <div class="sm:col-span-3">
+                                        <label for="challenge-duration" class="block text-sm font-medium text-gray-700">Thời gian (Giây)</label>
+                                        <input type="number" id="challenge-duration" name="MaxDuration" required min="1" value="3000"
+                                            class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    </div>
+                                    
+                                    <div class="sm:col-span-3">
+                                        <label for="challenge-misscount" class="block text-sm font-medium text-gray-700">Số lỗ hổng (Max)</label>
+                                        <input type="number" id="challenge-misscount" name="MissCount" required min="0"
+                                            class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                    </div>
+                                    
+                                    @* --- Khu vực Vật phẩm Động --- *@
+                                    <div class="sm:col-span-6 border-t pt-4 mt-2">
+                                        <h4 class="text-md font-semibold text-gray-800 mb-2 flex justify-between items-center">
+                                            Dữ liệu Vật phẩm 
+                                            <button type="button" id="addItemButton" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition disabled:opacity-50">
+                                                + Thêm Vật Phẩm
+                                            </button>
+                                        </h4>
+                                        <div id="itemsContainer" class="space-y-3">
+                                        </div>
+                                        <p id="itemCountMessage" class="mt-2 text-xs text-gray-500">Tối đa 15 vật phẩm.</p>
+                                    </div>
+                                    <input type="hidden" id="challenge-quesdata-json" name="QuesDataJson" />
+                                    <input type="hidden" id="challenge-dpboard" name="DpBoardJson" />
+                                    <input type="hidden" id="challenge-resultitems" name="ResultItemsJson" />
+                                    <input type="hidden" id="challenge-missarray" name="MissArrayJson" />
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                        <button type="submit" id="save-button"
+                                class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition">
+                            <span id="save-button-text">Tạo Đề Bài</span>
+                        </button>
+                        <button type="button" onclick="closeEditModal()"
+                                class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition">
+                            Hủy
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@* --- Modal Xem Chi Tiết Đề Bài --- *@
+<div id="detailChallengeModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-detail" role="dialog" aria-modal="true">
+    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4 max-h-[80vh] overflow-y-auto">
                     <div class="sm:flex sm:items-start">
                         <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                            <h3 class="text-xl leading-6 font-medium text-gray-900" id="modal-title-edit">
-                                Tạo Đề Bài Mới
+                            <h3 class="text-xl leading-6 font-medium text-gray-900 mb-2" id="modal-title-detail">
+                                Chi Tiết Đề Bài: <span id="detail-challenge-id" class="font-normal text-indigo-600"></span>
                             </h3>
-                            <p class="text-sm text-red-500 hidden" id="form-error-message"></p>
+
+                            <div id="detail-info" class="text-sm text-gray-700 mb-6 space-y-1">
+                                <p><strong>Độ Khó:</strong> <span id="detail-difficulty"></span></p>
+                                <p><strong>Dung lượng Tối đa (W):</strong> <span id="detail-capacity"></span></p>
+                                <p><strong>Thời gian Tối đa (Giây):</strong> <span id="detail-duration"></span></p>
+                                <p><strong>Số Lỗ hổng:</strong> <span id="detail-misscount"></span></p>
+                            </div>
                             
-                            <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-6 sm:grid-cols-6">
-                                
-                                <input type="hidden" id="challenge-is-edit" value="false" />
-                                <input type="hidden" id="challenge-id-edit" name="Id" /> @* Chỉ dùng để lưu ID khi EDIT *@
-                                
-                                <div class="sm:col-span-3">
-                                    <label for="challenge-difficulty" class="block text-sm font-medium text-gray-700">Độ Khó</label>
-                                    <select id="challenge-difficulty" name="Difficulty" required
-                                            class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                        <option value="1">1 - Dễ</option>
-                                        <option value="2">2 - Trung Bình</option>
-                                        <option value="3">3 - Khó</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="sm:col-span-3">
-                                    <label for="challenge-capacity" class="block text-sm font-medium text-gray-700">Dung lượng Tối đa (W)</label>
-                                    <input type="number" id="challenge-capacity" name="MaxCapacity" required min="1"
-                                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                </div>
-
-                                <div class="sm:col-span-3">
-                                    <label for="challenge-duration" class="block text-sm font-medium text-gray-700">Thời gian (Giây)</label>
-                                    <input type="number" id="challenge-duration" name="MaxDuration" required min="1" value="3000"
-                                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                </div>
-                                
-                                <div class="sm:col-span-3">
-                                    <label for="challenge-misscount" class="block text-sm font-medium text-gray-700">Số lỗ hổng (Max)</label>
-                                    <input type="number" id="challenge-misscount" name="MissCount" required min="0"
-                                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-                                </div>
-                                
-                                @* --- Khu vực Vật phẩm Động --- *@
-                                <div class="sm:col-span-6 border-t pt-4 mt-2">
-                                    <h4 class="text-md font-semibold text-gray-800 mb-2 flex justify-between items-center">
-                                        Dữ liệu Vật phẩm 
-                                        <button type="button" id="addItemButton" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition disabled:opacity-50">
-                                            + Thêm Vật Phẩm
-                                        </button>
-                                    </h4>
-                                    <div id="itemsContainer" class="space-y-3">
-                                        @* Các vật phẩm sẽ được thêm bằng JavaScript *@
-                                    </div>
-                                    <p id="itemCountMessage" class="mt-2 text-xs text-gray-500">Tối đa 15 vật phẩm.</p>
-                                </div>
-                                <input type="hidden" id="challenge-quesdata-json" name="QuesDataJson" />
-
-                                @* Các trường ẩn cho dữ liệu đã được tính toán (chỉ cần cho PUT) *@
-                                <input type="hidden" id="challenge-dpboard" name="DpBoardJson" />
-                                <input type="hidden" id="challenge-resultitems" name="ResultItemsJson" />
-                                <input type="hidden" id="challenge-missarray" name="MissArrayJson" />
-                                
-                                @* Không cần trường CreatedBy/UpdatedBy, Server sẽ tự lấy từ Token/Cookie *@
-
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">1. Danh Sách Vật Phẩm (QuesDataJson)</h4>
+                            <div class="overflow-x-auto mb-6 border border-gray-200 rounded-lg">
+                                <table class="w-full divide-y divide-gray-200 table-fixed">
+                                    <thead class="bg-gray-50 w-full">
+                                        <tr class="w-full">
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[10%]">#</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[40%]">ID</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[25%]">Trọng lượng (W)</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-[25%]">Giá trị (V)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detail-items-table-body" class="bg-white divide-y divide-gray-100">
+                                    </tbody>
+                                </table>
                             </div>
 
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">2. Bảng Quy Hoạch Động (DP Board)</h4>
+                            <div class="overflow-x-auto mb-6">
+                                <table class="min-w-full divide-y divide-gray-300 border border-gray-300">
+                                    <thead id="detail-dpboard-head" class="bg-gray-100">
+                                    </thead>
+                                    <tbody id="detail-dpboard-body" class="bg-white divide-y divide-gray-100">
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <h4 class="text-lg font-semibold text-gray-800 mb-2">3. Danh Sách Vật Phẩm Tối Ưu (ResultItemsJson)</h4>
+                            <div class="overflow-x-auto border border-gray-200 rounded-lg">
+                                <table class="min-w-full divide-y divide-gray-200 table-fixed">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trọng lượng (W)</th>
+                                            <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Giá trị (V)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detail-result-items-table-body" class="bg-white divide-y divide-gray-100">
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button type="submit" id="save-button"
-                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition">
-                        <span id="save-button-text">Tạo Đề Bài</span>
-                    </button>
-                    <button type="button" onclick="closeEditModal()"
-                            class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition">
-                        Hủy
+                    <button type="button" onclick="closeDetailModal()"
+                            class="w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition">
+                        Đóng
                     </button>
                 </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        // --- CÁC HẰNG SỐ & DOM ELEMENTS ---
         const MAX_ITEMS = 15;
-        const DEFAULT_ITEMS = 3; // Mặc định 3 vật phẩm
+        const DEFAULT_ITEMS = 3;
         const modal = document.getElementById('editChallengeModal');
         const modalTitle = document.getElementById('modal-title-edit');
         const saveButton = document.getElementById('save-button-text');
@@ -262,6 +336,16 @@
         const addItemButton = document.getElementById('addItemButton');
         const quesDataJsonInput = document.getElementById('challenge-quesdata-json');
         const itemCountMessage = document.getElementById('itemCountMessage');
+        const detailModal = document.getElementById('detailChallengeModal');
+        const detailChallengeId = document.getElementById('detail-challenge-id');
+        const detailDifficulty = document.getElementById('detail-difficulty');
+        const detailCapacity = document.getElementById('detail-capacity');
+        const detailDuration = document.getElementById('detail-duration');
+        const detailMissCount = document.getElementById('detail-misscount');
+        const detailItemsTableBody = document.getElementById('detail-items-table-body');
+        const detailResultItemsTableBody = document.getElementById('detail-result-items-table-body');
+        const detailDpBoardHead = document.getElementById('detail-dpboard-head');
+        const detailDpBoardBody = document.getElementById('detail-dpboard-body');
 
         // --- Form Fields ---
         const fields = {
@@ -274,11 +358,6 @@
             MissArrayJson: document.getElementById('challenge-missarray'),
         };
 
-        // --- Helper Functions ---
-        function getVietnameseDifficulty(difficulty) { /* ... */ }
-
-        // --- ITEM MANAGEMENT LOGIC ---
-
         function updateAddItemButton() {
             const currentCount = itemsContainer.children.length;
             const isDisabled = currentCount >= MAX_ITEMS;
@@ -287,15 +366,20 @@
             itemCountMessage.innerText = `Hiện tại: ${currentCount}/${MAX_ITEMS} vật phẩm.`;
         }
 
+        function getVietnameseDifficulty(level) {
+            switch (level) {
+                case 1: return 'Dễ';
+                case 2: return 'Trung Bình';
+                case 3: return 'Khó';
+                default: return 'Không xác định';
+            }
+        }
+
         function createItemRow(index, weight = '', value = '', itemId = null) {
             const row = document.createElement('div');
             row.className = 'flex space-x-2 items-center item-row';
-            // Lưu ID vật phẩm nếu có (chế độ Sửa)
             row.dataset.itemId = itemId || ''; 
             row.dataset.itemIndex = index;
-            
-            // Xóa nút xóa nếu chỉ còn 1 vật phẩm, nhưng ta luôn cho phép xóa
-            // if (itemsContainer.children.length > 0) { ... }
             
             row.innerHTML = `
                 <span class="text-sm font-medium text-gray-700 w-8">#${index}</span>
@@ -329,13 +413,11 @@
             itemsContainer.innerHTML = '';
             
             if (itemsData.length > 0) {
-                // Chế độ Sửa: Thêm vật phẩm đã có
                 itemsData.forEach((item, index) => {
                     const row = createItemRow(index + 1, item.Weight, item.Value, item.Id);
                     itemsContainer.appendChild(row);
                 });
             } else {
-                // Chế độ Tạo mới: Thêm vật phẩm mặc định (3)
                 for (let i = 0; i < DEFAULT_ITEMS; i++) {
                     const row = createItemRow(i + 1);
                     itemsContainer.appendChild(row);
@@ -355,14 +437,12 @@
             }
         });
 
-        // --- Modal Control ---
-
         function closeEditModal() {
             modal.classList.add('hidden');
             formError.classList.add('hidden');
             formError.innerText = '';
             form.reset();
-            initializeItems([]); // Reset item container về mặc định 3 item
+            initializeItems([]);
         }
         
         async function showEditModal(challengeId) {
@@ -370,7 +450,6 @@
             formError.classList.add('hidden');
             
             if (challengeId) {
-                // Chế độ SỬA
                 modalTitle.innerText = 'Chỉnh Sửa Đề Bài';
                 saveButton.innerText = 'Lưu Thay Đổi';
                 isEditInput.value = 'true';
@@ -391,7 +470,7 @@
                     fields.MissArrayJson.value = data.missArrayJson;
                     
                     const itemsData = JSON.parse(data.quesDataJson || '[]');
-                    initializeItems(itemsData); // Khởi tạo với dữ liệu có sẵn
+                    initializeItems(itemsData);
 
                 } catch (error) {
                     alert('Lỗi: ' + error.message);
@@ -399,17 +478,15 @@
                     return;
                 }
             } else {
-                // Chế độ TẠO MỚI
                 modalTitle.innerText = 'Tạo Đề Bài Mới';
                 saveButton.innerText = 'Tạo Đề Bài';
                 isEditInput.value = 'false';
                 challengeIdEditInput.value = '';
-                initializeItems([]); // Khởi tạo 3 vật phẩm mặc định
+                initializeItems([]);
             }
             modal.classList.remove('hidden');
         }
 
-        // --- Submit Form (POST/PUT) ---
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
             formError.classList.add('hidden');
@@ -418,14 +495,12 @@
             const method = isEdit ? 'PUT' : 'POST';
             const url = '/api/Challenge';
             
-            // 1. Thu thập dữ liệu Vật phẩm và tạo QuesDataJson
             const itemsData = Array.from(itemsContainer.children).map(row => {
                 const weight = row.querySelector('.item-weight').value;
                 const value = row.querySelector('.item-value').value;
                 const itemId = row.dataset.itemId; 
                 
                 return { 
-                    // Gửi ID cũ khi SỬA để Service có thể tái sử dụng/cập nhật
                     Id: isEdit && itemId ? itemId : null, 
                     Weight: parseInt(weight), 
                     Value: parseInt(value) 
@@ -437,52 +512,24 @@
                  return;
             }
 
-            // Gán JSON vào trường ẩn
             quesDataJsonInput.value = JSON.stringify(itemsData);
 
-            // 2. Thu thập dữ liệu form và tạo Payload
             const formData = {
-                // ID chỉ được gửi khi SỬA (PUT)
                 Id: isEdit ? challengeIdEditInput.value : undefined, 
                 difficulty: parseInt(fields.Difficulty.value),
                 maxCapacity: parseInt(fields.MaxCapacity.value),
                 maxDuration: parseInt(fields.MaxDuration.value),
                 missCount: parseInt(fields.MissCount.value),
                 quesDataJson: quesDataJsonInput.value,
-                
-                // Các trường ẩn (chỉ có giá trị khi SỬA)
                 DpBoardJson: isEdit ? fields.DpBoardJson.value : undefined,
                 ResultItemsJson: isEdit ? fields.ResultItemsJson.value : undefined,
                 MissArrayJson: isEdit ? fields.MissArrayJson.value : undefined,
             };
-            console.log("Chế độ:", isEdit ? "Sửa (PUT)" : "Tạo mới (POST)");
-            console.log("URL:", url);
-            console.log("Phương thức:", method);
-            console.log("Dữ liệu Vật phẩm()Type:",typeof itemsData);
-            console.log("Dữ liệu Vật phẩm:", itemsData);
-            console.log("QuesDataJson:()Type",typeof quesDataJsonInput.value);
-            console.log("QuesDataJson:", quesDataJsonInput.value);
-            console.log("Các trường ẩn (nếu có):", {
-                DpBoardJson: formData.DpBoardJson,
-                ResultItemsJson: formData.ResultItemsJson,
-                MissArrayJson: formData.MissArrayJson
-            });
-            console.log("ID (nếu có):", formData.Id);
-            console.log("MaxCapacity:(Type)",typeof formData.maxCapacity);
-            console.log("MaxCapacity:", formData.maxCapacity);
-            console.log("MaxDuration:(Type)",typeof formData.maxDuration);
-            console.log("MaxDuration:", formData.maxDuration);
-            console.log("MissCount:(Type)",typeof formData.missCount);
-            console.log("MissCount:", formData.missCount);
-            console.log("Difficulty:(Type)",typeof formData.difficulty);
-            console.log("Difficulty:", formData.difficulty);
-            console.log("Payload trước khi gửi:", formData);
 
-            // Lọc bỏ các trường undefined
             const payload = Object.fromEntries(
                 Object.entries(formData).filter(([_, v]) => v !== undefined)
             );
-            // 3. Gửi Request
+
             try {
                 document.getElementById('save-button').disabled = true;
                 document.getElementById('save-button').classList.add('opacity-50', 'cursor-not-allowed');
@@ -515,6 +562,113 @@
             formError.classList.remove('hidden');
             formError.innerText = message;
         }
+
+        function closeDetailModal() {
+            detailModal.classList.add('hidden');
+        }
+
+        function populateItemsTable(items, tableBody) {
+            tableBody.innerHTML = '';
+            if (items.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">Không có vật phẩm.</td></tr>`;
+                return;
+            }
+                items.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900 text-ellipsis">${item.Id}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">${item.Weight}</td>
+                <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-indigo-600">${item.Value}</td>
+`;
+tableBody.appendChild(row);
+});
+}
+
+function populateDpBoard(dpBoard, missArray, maxCapacity) {
+detailDpBoardHead.innerHTML = '';
+detailDpBoardBody.innerHTML = '';
+
+if (!dpBoard || dpBoard.length === 0) {
+detailDpBoardBody.innerHTML = `<tr><td colspan="${maxCapacity + 2}" class="px-4 py-3 text-center text-gray-500">Không có dữ liệu DP Board.</td></tr>`;
+return;
+}
+
+let headerRow = '<tr><th class="px-2 py-2 text-center text-xs font-bold text-gray-700 border-r border-gray-300 w-12">i</th>'; // w-12
+            headerRow += `<th class="px-2 py-2 text-center text-xs font-bold text-gray-700 border-r border-gray-300 w-12">W=0</th>`; // w-12
+            for (let w = 1; w <= maxCapacity; w++) {
+                headerRow += `<th class="px-2 py-2 text-center text-xs font-bold text-gray-700 border-r border-gray-300 w-12">W=${w}</th>`; // w-12
+            }
+            headerRow += '</tr>';
+            detailDpBoardHead.innerHTML = headerRow;
+
+for (let i = 0; i < dpBoard.length; i++) {
+                let dataRow = document.createElement('tr');
+                dataRow.innerHTML += `<td class="px-2 py-1 text-center text-sm font-semibold text-gray-900 bg-gray-50 border-r border-gray-300 w-12">${i}</td>`;
+                
+                for (let w = 0; w <= maxCapacity; w++) {
+                    const isMiss = missArray.some(miss => miss.X === i && miss.Y === w);
+                    const cellClass = isMiss 
+                        ? 'bg-red-200 text-red-800 font-bold border-r border-gray-300' 
+                        : 'text-gray-700 border-r border-gray-300';
+                    const cellValue = dpBoard[i][w] !== undefined ? dpBoard[i][w] : '-';
+                    
+                    dataRow.innerHTML += `<td class="px-2 py-1 text-center text-xs ${cellClass} w-12">${cellValue}</td>`;
+                }
+                detailDpBoardBody.appendChild(dataRow);
+            }
+}
+
+async function showDetailModal(challengeId) {
+ 
+ try {
+ const response = await fetch(`/api/Challenge/${challengeId}`);
+                console.log("Phản hồi nhận được:", response);
+ if (!response.ok) throw new Error('Không tải được dữ liệu chi tiết đề bài.');
+ const data = await response.json();
+ 
+
+ detailChallengeId.innerText = data.id;
+ detailDifficulty.innerText = getVietnameseDifficulty(data.difficulty);
+ detailCapacity.innerText = data.maxCapacity;
+ detailDuration.innerText = data.maxDuration;
+ detailMissCount.innerText = data.missCount;
+
+ const itemsData = JSON.parse(data.quesDataJson || '[]');
+ const resultItems = JSON.parse(data.resultItemsJson || '[]');
+ const dpBoard = JSON.parse(data.dpBoardJson || '[[]]');
+ const missArray = JSON.parse(data.missArrayJson || '[]');
+
+ populateItemsTable(itemsData, detailItemsTableBody);
+ populateResultItemsTable(resultItems, detailResultItemsTableBody);
+ populateDpBoard(dpBoard, missArray, data.maxCapacity);
+
+ detailModal.classList.remove('hidden');
+
+} catch (error) {
+ console.error('Lỗi khi tải chi tiết đề bài:', error);
+ alert('Lỗi tải dữ liệu chi tiết: ' + error.message);
+ detailModal.classList.add('hidden');
+}
+ }
+
+function populateResultItemsTable(items, tableBody) {
+ tableBody.innerHTML = '';
+if (items.length === 0) {
+tableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-3 text-center text-gray-500">Không có vật phẩm tối ưu.</td></tr>`;
+return;
+}
+items.forEach((item, index) => {
+const row = document.createElement('tr');
+row.innerHTML = `
+ <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+ <td class="px-4 py-2 whitespace-nowrap text-xs text-gray-900 text-ellipsis">${item.Id}</td>
+ <td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-gray-700">${item.Weight}</td>
+<td class="px-4 py-2 whitespace-nowrap text-sm font-medium text-indigo-600">${item.Value}</td>
+`;
+tableBody.appendChild(row);
+});
+}
 
         // --- Search/Debounce Logic ---
         document.addEventListener('DOMContentLoaded', function () {

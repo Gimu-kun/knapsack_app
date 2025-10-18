@@ -33,7 +33,6 @@ namespace knapsack_app.ViewModels
         public int MaxCapacity { get; set; }
 
         [Required(ErrorMessage = "Max Duration là bắt buộc.")]
-        [Range(1, 300, ErrorMessage = "Duration phải từ 1 đến 300 giây.")]
         public int MaxDuration { get; set; }
 
         public int MissCount { get; set; } = 0;

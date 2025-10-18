@@ -1,0 +1,71 @@
+/* Nút Chế Độ Chơi (Mode) */
+.mode-tab {
+    /* Đảm bảo transition vẫn hoạt động tốt với class mới */
+    transition: all 0.2s ease-in-out; 
+    border: 1px solid #d1d5db; /* gray-300 */
+}
+
+.tab-active {
+    background-color: #3b82f6; /* blue-500 */
+    color: white;
+    box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.4);
+    transform: translateY(-1px); /* Dịch chuyển nhẹ khi active */
+    border: 2px solid #1d4ed8; /* blue-700 */
+    /* Hiệu ứng viền nổi bật hơn */
+    outline: none;
+    z-index: 10;
+}
+
+.tab-inactive {
+    background-color: #f9fafb; /* gray-50 - sáng hơn */
+    color: #4b5563; /* gray-600 */
+    border: 1px solid #e5e7eb; /* gray-200 */
+}
+
+/* Nút Độ Khó (Difficulty) */
+.difficulty-tab {
+    /* Đảm bảo transition vẫn hoạt động tốt với class mới */
+    transition: all 0.2s ease-in-out;
+    border: 1px solid #fdba74; /* orange-300 */
+}
+
+.difficulty-active {
+    background-color: #f97316; /* orange-600 */
+    color: white;
+    box-shadow: 0 4px 14px 0 rgba(249, 115, 22, 0.4);
+    transform: translateY(-1px); /* Dịch chuyển nhẹ khi active */
+    border: 2px solid #c2410c; /* orange-800 */
+    /* Hiệu ứng viền nổi bật hơn */
+    outline: none;
+    z-index: 10;
+}
+
+.difficulty-inactive {
+    background-color: #fff7ed; /* orange-50 */
+    color: #9a3412; /* orange-900 */
+    border: 1px solid #fed7aa; /* orange-200 */
+}
+
+/* Cập nhật Bảng Xếp Hạng cho phù hợp với font-size nhỏ hơn */
+.leaderboard-table th {
+    background-color: #eef2ff; /* indigo-50 - nền nhạt hơn */
+    color: #374151;
+    text-transform: uppercase;
+    font-size: 0.75rem; /* text-xs */
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #c7d2fe; /* indigo-200 */
+    padding: 0.75rem 1rem; /* Giảm padding */
+}
+
+.leaderboard-table td {
+    padding: 0.75rem 1rem; /* Giảm padding */
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: middle;
+}
+
+/* Các lớp CSS khác giữ nguyên */
+.transition-transform {
+    transition-property: transform;
+    transition-duration: 0.3s;
+}

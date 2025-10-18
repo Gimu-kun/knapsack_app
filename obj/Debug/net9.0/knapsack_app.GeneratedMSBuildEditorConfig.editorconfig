@@ -48,6 +48,34 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cVXNlck1hbmFnZXIuY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Cli/Home.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpXEhvbWUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Cli/LeaderBoard.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpXExlYWRlckJvYXJkLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Cli/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpXExvZ2luLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Cli/PlayGame.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpXFBsYXlHYW1lLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Cli/Register.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpXFJlZ2lzdGVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Cli/Selection.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpXFNlbGVjdGlvbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Cli/WaitingRoom.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2xpXFdhaXRpbmdSb29tLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/hieun/Desktop/knapsack_app/Pages/Index.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXguY3NodG1s
 build_metadata.AdditionalFiles.CssScope = 
@@ -58,6 +86,14 @@ build_metadata.AdditionalFiles.CssScope =
 
 [C:/Users/hieun/Desktop/knapsack_app/Pages/Shared/_Admin_Layout.cshtml]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9BZG1pbl9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Shared/_Cli_Header.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9DbGlfSGVhZGVyLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/hieun/Desktop/knapsack_app/Pages/Shared/_Cli_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2hhcmVkXF9DbGlfTGF5b3V0LmNzaHRtbA==
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/hieun/Desktop/knapsack_app/Pages/Shared/_FullScreenLoadingOverlay.cshtml]

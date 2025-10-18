@@ -18,8 +18,11 @@ public class TakenModel
     [Column("challenge_id", TypeName = "varchar(50)")]
     public string ChallengeId { get; set; } = string.Empty;
 
-    [Column("is_multiplay", TypeName = "tinyint(1)")]
-    public bool IsMultiplay { get; set; }
+    [Column("team_name", TypeName = "varchar(100)")]
+    public string TeamName { get; set; }
+
+    [Column("team_id", TypeName = "varchar(50)")]
+    public string TeamId { get; set; }
 
     [Column("player_count")]
     public int PlayerCount { get; set; }
@@ -45,11 +48,12 @@ public class TakenModel
         TakenAt = DateTime.UtcNow;
     }
     
-    public TakenModel(string userId, string challengeId, bool isMultiplay, int playerCount, int takenScore, int takenDuration)
+    public TakenModel(string userId, string challengeId, string teamName, string teamId, int playerCount, int takenScore, int takenDuration)
     {
         UserId = userId;
         ChallengeId = challengeId;
-        IsMultiplay = isMultiplay;
+        TeamName = teamName;
+        TeamId = teamId;
         PlayerCount = playerCount;
         TakenScore = takenScore;
         TakenDuration = takenDuration;

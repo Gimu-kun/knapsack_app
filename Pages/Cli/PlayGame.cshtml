@@ -1,0 +1,415 @@
+@page
+@model knapsack_app.Pages.Cli.PlayGameModel
+@{
+    // Thiết lập Layout cho trang
+    Layout = "_Cli_Layout";
+    ViewData["Title"] = "Knapsack 0/1 Game";
+}
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="~/css/playgame.css">
+
+@{
+    // Trong môi trường Razor thực tế, bạn sẽ parse chuỗi JSON này thành đối tượng C#
+    // Hiện tại, tôi dùng ViewBag/TempData hoặc mô hình Model để truyền data
+    // Dưới đây là cách mô phỏng dữ liệu JSON đã được parse
+    var gameData = new
+    {
+        id = "KSC-8A2416",
+        difficulty = 1,
+        maxCapacity = 6,
+        maxDuration = 60,
+        missCount = 3,
+        // Dữ liệu Vật phẩm (Items)
+        items = new[]
+    {
+new { Id = "e4f684a4-118b-47fe-90a3-d245b8a870a0", Value = 6, Weight = 1, Name = "Item A" },
+new { Id = "b89fc1be-c57d-4cd8-98e0-3171f4064f37", Value = 10, Weight = 2, Name = "Item B" },
+new { Id = "94d06403-a9ae-402c-a9bd-10dbdd64e72c", Value = 120, Weight = 3, Name = "Item C" }
+},
+        // Bảng DP
+        dpBoard = new[]
+    {
+new[] {0, 0, 0, 0, 0, 0, 0},
+new[] {0, 6, 6, 6, 6, 6, 6},
+new[] {0, 6, 10, 16, 16, 16, 16},
+new[] {0, 6, 10, 120, 126, 130, 136}
+},
+        // Dữ liệu hàng
+        weights = Enumerable.Range(0, 7).ToArray() // 0 đến maxCapacity
+    };
+
+    var capacity = gameData.maxCapacity;
+    var dpRows = gameData.dpBoard.Length;
+    var dpCols = gameData.dpBoard[0].Length;
+}
+
+<body class="bg-gray-100 text-gray-800 pt-16 font-[Inter]">
+
+    <div id="utility-toolbar" class="fixed top-1/2 left-0 transform -translate-y-1/2 ml-4 z-50 flex flex-col space-y-3">
+        <button class="utility-btn bg-red-500 text-white hover:bg-red-600" title="Reset Game (Xóa hết vật phẩm)">
+            <span class="material-symbols-outlined">
+            tv_options_edit_channels
+            </span>
+        </button>
+        <button id="toggle-dp-btn" class="utility-btn bg-purple-500 text-white hover:bg-purple-600" title="Ẩn/Hiện Bảng DP">
+            <span class="material-symbols-outlined">
+            stylus_fountain_pen
+            </span>
+        </button>
+        <button class="utility-btn bg-blue-500 text-white hover:bg-blue-600" title="Xem Hướng Dẫn">
+            <span class="material-symbols-outlined">
+            flash_on
+            </span>
+        </button>
+    </div>
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+
+        <div class="bg-white p-6 rounded-xl shadow-lg border-b-4 border-blue-500 mb-8">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight sm:text-4xl">
+                KNAPSACK 0/1: <span class="text-blue-600">MISSION @gameData.id</span>
+            </h1>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm font-semibold uppercase">
+                <div class="p-3 bg-blue-50 rounded-lg text-blue-800">
+                    <span class="block text-xs font-normal text-gray-500">Max Capacity (W)</span>
+                    <span class="text-2xl font-bold">@gameData.maxCapacity</span> kg
+                </div>
+                <div class="p-3 bg-green-50 rounded-lg text-green-800">
+                    <span class="block text-xs font-normal text-gray-500">Max Duration</span>
+                    <span class="text-2xl font-bold">@gameData.maxDuration</span> secs
+                </div>
+                <div class="p-3 bg-red-50 rounded-lg text-red-800">
+                    <span class="block text-xs font-normal text-gray-500">Miss Count (Lỗi tối đa)</span>
+                    <span class="text-2xl font-bold">@gameData.missCount</span> lần
+                </div>
+                <div class="p-3 bg-yellow-50 rounded-lg text-yellow-800">
+                    <span class="block text-xs font-normal text-gray-500">Difficulty</span>
+                    <span class="text-2xl font-bold">@gameData.difficulty</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+            <div class="lg:col-span-3 space-y-8">
+
+                <div class="bg-white p-6 rounded-xl shadow-lg sticky top-20">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-900">1. Danh Sách Vật Phẩm</h3>
+                    <p class="text-sm text-gray-600 mb-4">Thông số cơ bản của các vật phẩm.</p>
+
+                    <div class="overflow-x-auto">
+                        <table class="min-w-max text-sm text-center text-gray-500 border-collapse table-fixed">
+
+                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2 text-left w-32 min-w-32">Thuộc tính \ Item</th>
+                                    @for (int i = 0; i < gameData.items.Length; i++)
+                                    {
+                                        var item = gameData.items[i];
+                                        <th scope="col"
+                                            class="px-4 py-2 font-bold text-gray-900 border-l border-gray-300 w-24 min-w-24">
+                                            Vp. @(i + 1) (@item.Name)
+                                        </th>
+                                    }
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr class="bg-white border-b hover:bg-gray-50">
+                                    <th scope="row" class="px-4 py-2 font-medium text-gray-900 text-left bg-blue-50">
+                                        Giá Trị
+                                    </th>
+                                    @foreach (var item in gameData.items)
+                                    {
+                                        <td class="px-4 py-2 text-green-600 font-semibold border-l border-gray-200">
+                                            @item.Value
+                                        </td>
+                                    }
+                                </tr>
+
+                                <tr class="bg-white hover:bg-gray-50">
+                                    <th scope="row"
+                                        class="px-4 py-2 font-medium text-gray-900 text-left bg-blue-50 border-t border-gray-200">
+                                        Trọng Lượng
+                                    </th>
+                                    @foreach (var item in gameData.items)
+                                    {
+                                        <td class="px-4 py-2 text-red-600 font-semibold border-t border-l border-gray-200">
+                                            @item.Weight kg
+                                        </td>
+                                    }
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-yellow-500">
+                    <button id="hint-button"
+                        class="w-full flex justify-between items-center text-left text-lg font-bold text-yellow-800 hover:text-yellow-600 transition">
+                        <span>💡 Gợi Ý (Hint)</span>
+                        <span id="hint-icon">▶</span>
+                    </button>
+
+                    <div id="hint-content" class="mt-3 overflow-hidden transition-max-h duration-500 ease-in-out"
+                        style="max-height: 0;">
+                        <hr class="my-3">
+                        <h4 class="text-md font-bold mb-2 text-gray-900">Thuật Toán Quy Hoạch Động (DP)</h4>
+                        <p class="text-sm text-gray-700 mb-2">Giá trị tại ô $DP[i][w]$ là giá trị lớn nhất có thể đạt
+                            được khi
+                            chọn từ **$i$ vật phẩm đầu tiên** với **túi có sức chứa $w$**.</p>
+
+                        <p class="text-sm font-semibold text-blue-600 mt-3">Công Thức Truy Hồi (Recurrence Relation):
+                        </p>
+                        <div class="bg-blue-50 p-3 rounded-lg overflow-x-auto text-xs font-mono">
+                            <pre>
+i: Vật phẩm hiện tại đang xét (Item i)
+w: Sức chứa hiện tại của túi (Capacity w)
+W_i: Trọng lượng của Item i
+V_i: Giá trị của Item i
+
+    Nếu W_i > w (Vật phẩm quá nặng):
+    DP[i][w] = DP[i-1][w]
+    (Không thể chọn Item i, giữ nguyên giá trị tối ưu của i-1)
+
+    Nếu W_i <= w (Vật phẩm vừa vặn):
+    DP[i][w] = max(
+    DP[i-1][w],                         // TH1: Không chọn Item i
+    V_i + DP[i-1][w - W_i]              // TH2: Chọn Item i
+    )
+(Lấy giá trị lớn nhất giữa việc KHÔNG chọn và CÓ chọn Item i)
+                            </pre>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-3 italic">
+                            **Giá trị tối ưu** cuối cùng sẽ nằm ở ô $DP[@gameData.items.Length][@gameData.maxCapacity]$.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-900">2. Bảng Quy Hoạch Động</h3>
+                    <p class="text-sm text-gray-600 mb-4">Giá trị tối đa đạt được khi xét $i$ vật phẩm đầu tiên và có
+                        sức chứa $w$.</p>
+
+                    <div class="overflow-x-auto dp-table-container">
+                        <table class="min-w-full border-collapse table-fixed">
+                            <thead class="bg-gray-200">
+                                <tr class="h-12">
+                                    <th class="dp-header-i bg-gray-300 w-10">i\w</th>
+                                    @for (int w = 0; w <= capacity; w++)
+                                    {
+                                        <th class="dp-header text-red-600 w-10">@w</th>
+                                    }
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int i = 0; i < dpRows; i++)
+                                {
+                                    <tr class="h-12">
+                                        <th class="dp-header-i w-10 bg-gray-200 text-red-600">
+                                            @(i)
+                                        </th>
+                                        @for (int w = 0; w < dpCols; w++)
+                                        {
+                                            var cellValue = gameData.dpBoard[i][w];
+                                            <td class="dp-cell text-center">@cellValue</td>
+                                        }
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-900">3. Knapsack (Túi)</h3>
+                    <p class="text-sm text-gray-600 mb-4">Kéo vật phẩm vào đây. Tổng trọng lượng không quá
+                        @gameData.maxCapacity kg.</p>
+
+                    <div id="knapsack-dropzone" class="knapsack-dropzone">
+                        <div class="w-full text-center text-gray-500 p-8">
+                            <svg class="mx-auto w-10 h-10 text-gray-400" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 13.255A23.518 23.518 0 0112 15c-3.15 0-6.11-.826-8.75-2.255L3 18v2h18v-7.745zM12 3a9 9 0 00-9 9h18a9 9 0 00-9-9z">
+                                </path>
+                            </svg>
+                            <p class="mt-2">Kéo vật phẩm vào đây</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 p-3 bg-gray-50 rounded-lg border">
+                        <p class="text-lg font-bold">Tổng Giá Trị: <span id="total-value"
+                                class="text-green-600">0</span></p>
+                        <p class="text-lg font-bold">Tổng Trọng Lượng: <span id="total-weight"
+                                class="text-red-600">0</span> / @gameData.maxCapacity kg</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="lg:col-span-1">
+                <div class="sticky top-20 space-y-4">
+                    <div class="bg-white p-4 rounded-xl shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-900 mb-2">4. Vật Phẩm Để Chọn</h3>
+                        <p class="text-sm text-gray-600 mb-3">Tổng cộng: @gameData.items.Length vật phẩm.</p>
+
+                        <div id="drag-items-container" class="flex flex-col gap-3 max-h-[85vh] overflow-y-auto pr-2">
+                            @foreach (var item in gameData.items)
+                            {
+                                <div class="drag-item w-full" draggable="true" data-id="@item.Id" data-value="@item.Value"
+                                    data-weight="@item.Weight">
+                                    <p class="text-sm font-bold text-gray-900">@item.Name</p>
+                                    <div class="flex justify-between text-xs mt-1">
+                                        <p class="text-green-600">V: <strong>@item.Value</strong></p>
+                                        <p class="text-red-600">W: <strong>@item.Weight</strong> kg</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </main>
+
+    <script>
+        const knapsack = document.getElementById('knapsack-dropzone');
+        const itemsContainer = document.getElementById('drag-items-container');
+        const maxCapacity = @capacity;
+
+        let totalWeight = 0;
+        let totalValue = 0;
+
+        function updateTotals() {
+            document.getElementById('total-weight').textContent = totalWeight;
+            document.getElementById('total-value').textContent = totalValue;
+
+            if (totalWeight > maxCapacity) {
+                knapsack.classList.add('border-red-500', 'bg-red-50');
+                knapsack.classList.remove('border-blue-500', 'bg-blue-50');
+            } else {
+                knapsack.classList.remove('border-red-500', 'bg-red-50');
+            }
+        }
+
+        // Bắt đầu kéo
+        itemsContainer.querySelectorAll('.drag-item').forEach(item => {
+            item.addEventListener('dragstart', (e) => {
+                // Truyền dữ liệu về ID, Value và Weight của vật phẩm
+                e.dataTransfer.setData('text/plain', JSON.stringify({
+                    id: item.dataset.id,
+                    value: parseInt(item.dataset.value),
+                    weight: parseInt(item.dataset.weight),
+                }));
+                // Tùy chỉnh hiệu ứng kéo
+                item.style.opacity = '0.5';
+            });
+
+            item.addEventListener('dragend', (e) => {
+                item.style.opacity = '1';
+            });
+        });
+
+        // Khu vực thả: Ngăn chặn mặc định
+        knapsack.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            knapsack.classList.add('drag-over');
+        });
+
+        // Khu vực thả: Rời khỏi
+        knapsack.addEventListener('dragleave', (e) => {
+            knapsack.classList.remove('drag-over');
+        });
+
+        // Khu vực thả: Thả vật phẩm
+        knapsack.addEventListener('drop', (e) => {
+            e.preventDefault();
+            knapsack.classList.remove('drag-over');
+
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            const draggedItem = itemsContainer.querySelector(`[data-id="${data.id}"]`);
+
+            // Nếu vật phẩm chưa có trong túi (đảm bảo không thả lại từ trong túi)
+            if (draggedItem && draggedItem.parentNode === itemsContainer) {
+
+                // 1. Thêm vào túi (Knapsack)
+                knapsack.appendChild(draggedItem);
+
+                // 2. Cập nhật tổng
+                totalWeight += data.weight;
+                totalValue += data.value;
+                updateTotals();
+
+                // 3. Xóa placeholder khi có vật phẩm
+                const placeholder = knapsack.querySelector('div.w-full.text-center');
+                if (placeholder) placeholder.remove();
+
+                // 4. Thêm nút "Remove" để kéo ra
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'X';
+                removeBtn.className = 'absolute top-1 right-1 text-red-500 hover:text-red-700 font-bold';
+                removeBtn.onclick = (event) => {
+                    event.stopPropagation(); // Ngăn chặn sự kiện kéo của item cha
+                    removeFromKnapsack(draggedItem, data);
+                };
+
+                // Đánh dấu đã được chọn và chỉnh style cho phù hợp với túi
+                draggedItem.classList.add('relative', 'border-blue-500');
+                draggedItem.classList.remove('bg-white', 'ring-4', 'ring-blue-300', 'shadow-lg'); // Xóa hover cũ
+                draggedItem.appendChild(removeBtn);
+
+                // Ngăn không cho kéo vật phẩm đã nằm trong Knapsack ra lại (tắt draggable)
+                draggedItem.setAttribute('draggable', 'false');
+            }
+        });
+
+        // Hàm kéo vật phẩm ra khỏi túi
+        function removeFromKnapsack(itemElement, itemData) {
+            // 1. Chuyển vật phẩm về lại khu vực kéo
+            itemsContainer.appendChild(itemElement);
+
+            // 2. Cập nhật tổng
+            totalWeight -= itemData.weight;
+            totalValue -= itemData.value;
+            updateTotals();
+
+            // 3. Xóa nút Remove và reset style
+            itemElement.querySelector('button').remove();
+            itemElement.classList.remove('relative', 'border-blue-500');
+            itemElement.setAttribute('draggable', 'true');
+
+            // 4. Hiện lại placeholder nếu túi trống
+            if (knapsack.children.length === 0) {
+                const placeholderHtml = `
+                    <div class="w-full text-center text-gray-500 p-8">
+                        <svg class="mx-auto w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.518 23.518 0 0112 15c-3.15 0-6.11-.826-8.75-2.255L3 18v2h18v-7.745zM12 3a9 9 0 00-9 9h18a9 9 0 00-9-9z"></path></svg>
+                        <p class="mt-2">Kéo vật phẩm vào đây</p>
+                    </div>`;
+                knapsack.innerHTML = placeholderHtml;
+            }
+        }
+        
+        const hintButton = document.getElementById('hint-button');
+        const hintContent = document.getElementById('hint-content');
+        const hintIcon = document.getElementById('hint-icon');
+        console.log("test",hintContent);
+        console.log(hintButton);
+        // Đặt chiều cao max-height ban đầu để transition hoạt động
+        // Phải thêm max-height lớn hơn nội dung để ẩn/hiện mượt mà
+        hintContent.style.maxHeight = '0px'; // Đảm bảo giá trị là chuỗi '0px'
+        hintButton.addEventListener('click', () => {
+            if (hintContent.style.maxHeight === '0px') {
+                // Expand: Đặt giá trị lớn hơn nội dung thực tế (ví dụ: 500px)
+                hintContent.style.maxHeight = "500px"; 
+                hintIcon.textContent = '▼';
+            } else {
+                // Collapse
+                hintContent.style.maxHeight = '0px';
+                hintIcon.textContent = '▶';
+            }
+        });
+    </script>
+</body>

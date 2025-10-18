@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using knapsack_app.Models.Models;
+using knapsack_app.ViewModels;
 using knapsack_app.Services;
 
 

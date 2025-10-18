@@ -1,0 +1,129 @@
+.dp-cell {
+    @apply border border-gray-300 p-2 text-center font-mono;
+    min-width: 40px;
+    transition: background-color 0.3s ease;
+}
+
+.dp-header {
+    @apply bg-gray-200 font-bold;
+}
+
+/* Styling for the drag items (placeholders) */
+.drag-item {
+    @apply cursor-pointer p-3 m-2 rounded-lg shadow-md bg-white border border-gray-200 transition duration-200 ease-in-out;
+}
+
+.drag-item:hover {
+    @apply ring-4 ring-blue-300 shadow-lg;
+}
+
+/* Styling for the drop zone (knapsack) */
+.knapsack-dropzone {
+    @apply border-4 border-dashed border-gray-300 rounded-xl bg-gray-100 p-6 flex flex-wrap items-start content-start min-h-[250px] transition duration-300;
+}
+
+.knapsack-dropzone.drag-over {
+    @apply border-blue-500 bg-blue-50;
+}
+
+/* Utility to hide the placeholder SVGs in the header if they exist */
+header svg {
+    display: inline-block;
+}
+
+.dp-header,
+.dp-cell {
+    @apply border border-gray-300 px-3 py-2 text-center text-xs md:text-sm whitespace-nowrap;
+}
+
+.drag-item {
+    /* Đảm bảo vật phẩm có nền trắng và căn chỉnh tốt trong sidebar */
+    @apply cursor-pointer p-3 rounded-lg shadow-sm bg-white border border-gray-200 transition duration-200 ease-in-out;
+}
+
+.drag-item:hover {
+    @apply ring-2 ring-blue-300 shadow-md;
+}
+
+.knapsack-dropzone {
+    @apply min-h-[150px] border-4 border-dashed border-gray-300 rounded-xl flex flex-wrap items-start content-start p-4 gap-2 transition duration-200;
+}
+
+.knapsack-dropzone.drag-over {
+    @apply border-blue-500 bg-blue-50;
+}
+
+
+.dp-header-i {
+    @apply border border-gray-300 px-3 py-2 text-center text-xs md:text-sm whitespace-nowrap bg-blue-50 text-blue-600;
+}
+
+.w-10 {
+    width: 40px;
+}
+
+
+.transition-max-h {
+        transition-property: max-height;
+    }
+    
+    /* Style cho vật phẩm trong túi */
+    #knapsack-dropzone .drag-item {
+        background-color: #e0f2fe; /* blue-100 */
+        border-width: 2px;
+        cursor: default; /* Không kéo được nữa */
+    }
+
+    /* Style mặc định cho vật phẩm trong itemsContainer */
+    #drag-items-container .drag-item {
+        background-color: #ffffff;
+        border-color: #e5e7eb; /* gray-200 */
+        cursor: grab;
+    }
+
+    /* Thêm style cho drag-over */
+    #knapsack-dropzone.drag-over {
+        border-color: #3b82f6;
+        background-color: #eff6ff; /* blue-50 */
+    }
+
+    /* Fix table cell sizing */
+    .dp-header, .dp-cell {
+        padding: 4px 0;
+        border: 1px solid #e5e7eb;
+        font-weight: 500;
+    }
+
+    .dp-header-i {
+        font-weight: 700;
+        text-align: center;
+        padding: 4px 0;
+        border: 1px solid #e5e7eb;
+    }
+
+    .knapsack-dropzone {
+        min-height: 150px;
+        border: 2px dashed #9ca3af; /* gray-400 */
+        border-radius: 0.75rem;
+        padding: 0.5rem;
+        display: flex;
+        flex-wrap: wrap;
+        align-content: flex-start;
+        gap: 8px;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .utility-btn {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        transition: all 0.15s ease-in-out;
+    }
+
+    .utility-btn:hover {
+        transform: scale(1.05);
+    }

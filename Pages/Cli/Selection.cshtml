@@ -1,0 +1,96 @@
+@page
+@model knapsack_app.Pages.Cli.LoginModel
+@{
+    Layout = "_Cli_Layout";
+}
+<section class="py-10 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16 items-start">
+            
+            <div class="lg:col-span-2 hidden lg:flex items-center justify-center relative min-h-[500px] mt-10 lg:mt-0">
+                <div class="absolute inset-0 flex flex-col items-center justify-center bg-gray-100/50 text-gray-500 text-lg rounded-xl border-dashed border-2 border-gray-400 p-4">
+                    <p class="text-center">Vị trí đặt Hình ảnh/Minh họa nổi bật</p>
+                    <p class="text-xs mt-2">(Khoảng 40% chiều rộng màn hình)</p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3">
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-0">
+                    
+                    <div class="p-5 border-2 border-blue-400 rounded-xl bg-white shadow-sm flex flex-col space-y-3 transition duration-300 hover:shadow-lg min-h-[220px]">
+                        <div class="flex items-center justify-start">
+                             <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4m8 0l-4 4m4-4l4 4"></path>
+                            </svg>
+                        </div>
+                        <p class="font-bold text-gray-900 text-base uppercase">EASY MODE</p>
+                        <p class="text-sm text-gray-600 flex-grow">Giới hạn trọng lượng nhỏ. Tập trung vào logic cơ bản và điền bảng DP.</p>
+                        
+                        <a href="#" class="mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-500 hover:bg-green-600 transition duration-300">
+                            Chọn
+                        </a>
+                    </div>
+
+                    <div class="p-5 border-2 border-blue-400 rounded-xl bg-white shadow-sm flex flex-col space-y-3 transition duration-300 hover:shadow-lg min-h-[220px]">
+                        <div class="flex items-center justify-start">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                            </svg>
+                        </div>
+                        <p class="font-bold text-gray-900 text-base uppercase">MEDIUM MODE</p>
+                        <p class="text-sm text-gray-600 flex-grow">Trọng lượng trung bình. Yêu cầu tính toán nhanh hơn và truy vết giải pháp.</p>
+                        
+                        <a href="#" class="mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-yellow-500 hover:bg-yellow-600 transition duration-300">
+                            Chọn
+                        </a>
+                    </div>
+
+                    <div class="p-5 border-2 border-blue-400 rounded-xl bg-white shadow-sm flex flex-col space-y-3 transition duration-300 hover:shadow-lg min-h-[220px]">
+                        <div class="flex items-center justify-start">
+                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.828 0l-4.243-4.243a8 8 0 1111.314 0z"></path>
+                            </svg>
+                        </div>
+                        <p class="font-bold text-gray-900 text-base uppercase">HARD MODE</p>
+                        <p class="text-sm text-gray-600 flex-grow">Giới hạn trọng lượng lớn và nhiều vật phẩm. Kiểm tra hiệu suất thuật toán.</p>
+                        
+                        <a href="#" class="mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition duration-300">
+                            Chọn
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-5 space-y-6">
+                    
+                    <div class="col-span-full">
+                        <a href="#" class="w-full inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300 shadow-xl uppercase tracking-wider">
+                            <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Tạo phòng mới
+                        </a>
+                    </div>
+                    
+                    <div class="p-6 border-2 border-gray-200 rounded-xl bg-gray-50 shadow-md">
+                        <p class="text-xl font-semibold text-gray-800 mb-4">Tham gia phòng</p>
+                        <div class="flex flex-col sm:flex-row gap-4">
+                            <input type="text" placeholder="Nhập mã phòng..." 
+                                class="flex-grow px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-sm"
+                                model="Model.RoomCode" />
+                            
+                            <a href="#" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition duration-300 shadow-md">
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
+                                Vào phòng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</section>

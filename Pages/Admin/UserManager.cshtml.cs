@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using knapsack_app.ViewModels;
-using knapsack_app.Models.Models;
+using knapsack_app.ViewModels;
 
 namespace knapsack_app.Pages.Admin
 {

@@ -19,12 +19,18 @@
         <main id="main-content" class="flex-grow w-full p-4 md:p-8 content-expanded">
             @RenderBody()
         </main>
-
     </div>
 
     @await RenderSectionAsync("Scripts", required: false)
 
     <script>
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        const toggleButton = document.getElementById('sidebar-toggle');
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        
+        const activeClasses = ['bg-indigo-600', 'font-semibold', 'shadow-md', 'text-white'];
+        const inactiveClasses = ['text-gray-300', 'hover:bg-gray-700'];
         document.addEventListener('DOMContentLoaded', function () {
             const sidebar = document.getElementById('sidebar');
             const mainContent = document.getElementById('main-content');
@@ -56,6 +62,40 @@
                 applyState(isCollapsed);
             });
         });
+
+        function removeActiveClass(item) {
+            item.classList.remove(...activeClasses);
+            item.classList.add(...inactiveClasses);
+            item.classList.remove('text-white');
+            item.classList.add('text-gray-300'); 
+        }
+
+        function applyActiveClass(item) {
+            sidebarItems.forEach(i => removeActiveClass(i));
+            item.classList.remove(...inactiveClasses);
+            item.classList.add(...activeClasses);
+            item.classList.remove('text-gray-300');
+            item.classList.add('text-white'); 
+        }
+
+        function setActiveItem() {
+            const currentPath = window.location.pathname.toLowerCase();
+            console.log("Current Path:", sidebarItems);
+            sidebarItems.forEach(item => {
+                if (item.tagName === 'A') {
+                    const itemPath = item.getAttribute('href').toLowerCase();
+                    if (currentPath === itemPath) {
+                        applyActiveClass(item);
+                    } else {
+                        removeActiveClass(item);
+                    }
+                } else if (item.tagName === 'BUTTON' && item.closest('form[asp-page-handler="Logout"]')) {
+                    removeActiveClass(item);
+                    item.classList.add('text-red-400', 'hover:bg-gray-700');
+                }
+            });
+        }
+        setActiveItem();
     </script>
 </body>
 

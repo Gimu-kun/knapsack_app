@@ -14,6 +14,37 @@ namespace knapsack_app.Controllers
             _userService = userService;
         }
 
+        /// <summary>
+        /// API Đăng nhập người dùng.
+        /// </summary>
+        /// <param name="request">Chứa Account và Password.</param>
+        /// <returns>Token JWT nếu thành công hoặc thông báo lỗi.</returns>
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginReqDto request)
+        {
+            if (string.IsNullOrEmpty(request.Account) || string.IsNullOrEmpty(request.Password))
+            {
+                return BadRequest(new AuthResult { Success = false, Message = "Tài khoản và mật khẩu không được để trống." });
+            }
+
+            // Gọi service để xác thực
+            var authResult = await _userService.Login(request);
+            
+            if (authResult.Success)
+            {
+                // Trả về token và thông báo thành công
+                return Ok(authResult);
+            }
+            else
+            {
+                // Trả về 401 Unauthorized nếu thất bại
+                return Unauthorized(authResult); 
+            }
+        }
+
+
+        // --- CÁC PHƯƠNG THỨC ĐIỀU KHIỂN USER KHÁC (Đã có sẵn) ---
+
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromForm] UserCreationReqDto request)
         {

@@ -1,0 +1,22 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+́́́*{
+    font-family: "Roboto", sans-serif;
+}
+
+/* Logo Styling */
+.sprung-logo {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 900;
+    /* Extra bold */
+    color: #1f2937;
+    /* Dark gray */
+}
+
+.sprung-logo span {
+    color: #6b7280;
+    /* Gray */
+    font-weight: 400;
+    /* Normal */
+}

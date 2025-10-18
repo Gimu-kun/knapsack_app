@@ -65,6 +65,8 @@ builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<ChallengeService>();
 builder.Services.AddScoped<HistoryService>();
+builder.Services.AddScoped<PasswordService>();
+builder.Services.AddScoped<LeaderBoardService>();
 
 // --- CẤU HÌNH AUTHENTICATION MỚI: Hỗ trợ Cookie-JWT Hybrid ---
 builder.Services
@@ -141,6 +143,8 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+app.UseStaticFiles();
 
 app.UseRouting();
 

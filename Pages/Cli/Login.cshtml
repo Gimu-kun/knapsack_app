@@ -1,0 +1,112 @@
+@page "/login"
+@model knapsack_app.Pages.Cli.LoginModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Đăng Nhập - Quản Trị</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        input[type=number]::-webkit-outer-spin-button,
+        input[type=number]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="w-full max-w-xs sm:max-w-sm">
+        <div class="bg-white p-8 md:p-10 rounded-xl shadow-xl border border-gray-100">
+            
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-extrabold text-gray-800 mb-2">Đăng Nhập</h1>
+                <p class="text-sm text-gray-500">Truy cập vào khu vực quản trị</p>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+            {
+                <div role="alert" class="bg-red-50 border border-red-300 text-red-600 px-4 py-3 rounded-lg relative mb-6 text-sm">
+                    <strong class="font-semibold">Lỗi:</strong>
+                    <span class="block sm:inline">@Model.ErrorMessage</span>
+                </div>
+            }
+
+            <form method="post" class="space-y-5">
+                
+                <div>
+                    <label asp-for="Input.Account" class="block text-sm font-medium text-gray-700 mb-1">
+                        Tài khoản
+                    </label>
+                    <input asp-for="Input.Account" 
+                        type="text" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-base focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 placeholder-gray-400" 
+                        placeholder="tên đăng nhập hoặc email"
+                        autocomplete="username"
+                        autofocus />
+                    <span asp-validation-for="Input.Account" class="mt-1 text-xs text-red-600 block"></span>
+                </div>
+
+                <div>
+                    <label asp-for="Input.Password" class="block text-sm font-medium text-gray-700 mb-1">
+                        Mật khẩu
+                    </label>
+                    <input asp-for="Input.Password" 
+                        type="password" 
+                        class="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-base focus:border-indigo-500 focus:ring-indigo-500 transition duration-150 placeholder-gray-400" 
+                        placeholder="********"
+                        autocomplete="current-password" />
+                    <span asp-validation-for="Input.Password" class="mt-1 text-xs text-red-600 block"></span>
+                </div>
+                
+                <div class="flex justify-between text-sm items-center">
+                    <a asp-page="/Index" class="font-medium text-gray-600 hover:text-gray-900 transition duration-150 flex items-center space-x-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        <span>Về Trang Chủ</span>
+                    </a>
+                    
+                    <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500 transition duration-150">
+                        Quên mật khẩu?
+                    </a>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" 
+                            class="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-md text-base font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-300 transform hover:scale-[1.01] active:scale-[0.99]">
+                        Đăng Nhập
+                    </button>
+                </div>
+
+                <div class="text-center pt-4 border-t border-gray-100 mt-6">
+                    <p class="text-sm text-gray-500">
+                        Chưa có tài khoản?
+                        <a asp-page="/Cli/Register" class="font-semibold text-indigo-600 hover:text-indigo-500 transition duration-150">
+                            Đăng ký ngay
+                        </a>
+                    </p>
+                </div>
+                
+            </form>
+            
+        </div>
+    </div>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+
+</body>
+</html>

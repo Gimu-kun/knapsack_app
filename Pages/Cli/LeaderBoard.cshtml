@@ -1,0 +1,183 @@
+@page "/rank"
+@model knapsack_app.Pages.LeaderboardModel
+@{
+    ViewData["Title"] = "Bảng Xếp Hạng Knapsack 0/1";
+    Layout = "_Cli_Layout";
+}
+
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="~/css/leader_board.css">
+
+@{}
+
+<body class="bg-gray-100 text-gray-800 font-[Inter] min-h-screen p-4 sm:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-8 sm:mb-12 text-center tracking-tight">
+            🏆 Bảng Xếp Hạng <span class="text-blue-600">KNAPSACK 0/1</span>
+        </h1>
+
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-6 sm:mb-8 border-b-4 border-blue-500">
+            <h2 class="text-xl font-bold mb-3 text-gray-800">Chọn Chế Độ Chơi (Mode)</h2>
+            <div class="grid grid-cols-4 gap-2 sm:gap-4">
+                <button data-mode="1"
+                    class="mode-tab p-2 text-sm font-semibold rounded-lg text-center transition hover:shadow-lg hover:scale-[1.02] @(Model.SelectedModeInt == 1 ? "tab-active" : "tab-inactive")">
+                    1 Người Chơi (Solo)
+                </button>
+                <button data-mode="2"
+                    class="mode-tab p-2 text-sm font-semibold rounded-lg text-center transition hover:shadow-lg hover:scale-[1.02] @(Model.SelectedModeInt == 2 ? "tab-active" : "tab-inactive")">
+                    2 Người Chơi (Duo)
+                </button>
+                <button data-mode="3"
+                    class="mode-tab p-2 text-sm font-semibold rounded-lg text-center transition hover:shadow-lg hover:scale-[1.02] @(Model.SelectedModeInt == 3 ? "tab-active" : "tab-inactive")">
+                    3 Người Chơi (Trio)
+                </button>
+                <button data-mode="4"
+                    class="mode-tab p-2 text-sm font-semibold rounded-lg text-center transition hover:shadow-lg hover:scale-[1.02] @(Model.SelectedModeInt == 4 ? "tab-active" : "tab-inactive")">
+                    4 Người Chơi (Squad)
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-6 sm:mb-8 border-b-4 border-orange-500">
+            <h2 class="text-xl font-bold mb-3 text-gray-800">Chọn Độ Khó (Difficulty)</h2>
+            <div class="grid grid-cols-3 gap-2 sm:gap-4">
+                <button data-difficulty="1"
+                    class="difficulty-tab p-2 text-sm font-semibold rounded-lg text-center transition hover:shadow-lg hover:scale-[1.02] @(Model.SelectedDifficultyInt == 1 ? "difficulty-active" : "difficulty-inactive")">
+                    DỄ
+                </button>
+                <button data-difficulty="2"
+                    class="difficulty-tab p-2 text-sm font-semibold rounded-lg text-center transition hover:shadow-lg hover:scale-[1.02] @(Model.SelectedDifficultyInt == 2 ? "difficulty-active" : "difficulty-inactive")">
+                    TRUNG BÌNH
+                </button>
+                <button data-difficulty="3"
+                    class="difficulty-tab p-2 text-sm font-semibold rounded-lg text-center transition hover:shadow-lg hover:scale-[1.02] @(Model.SelectedDifficultyInt == 3 ? "difficulty-active" : "difficulty-inactive")">
+                    KHÓ
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white p-6 sm:p-8 rounded-xl shadow-2xl">
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-4 sm:mb-6 border-b pb-3">
+                BXH: <span id="current-mode-display" class="text-blue-600">@Model.SelectedModeInt Người Chơi</span> -
+                <span id="current-difficulty-display" class="text-orange-600">@Model.SelectedDifficultyString</span>
+            </h2>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full text-sm sm:text-base text-gray-700 leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-center w-16 rounded-tl-xl">#</th>
+                            <th scope="col" class="text-left w-auto">Tên / Đội</th>
+                            <th scope="col" class="text-center w-35 text-green-600">Điểm (Value)</th>
+                            <th scope="col" class="text-center w-35 text-red-600">Thời gian (s)</th>
+                            <th scope="col" class="text-center w-64 rounded-tr-xl">Ngày chơi</th>
+                        </tr>
+                    </thead>
+                    
+                    <tbody id="leaderboard-body">
+                        @if (Model.LeaderboardData.Any())
+                        {
+                            @foreach (var entry in Model.LeaderboardData)
+                            {
+                                string rowClass = "bg-white hover:bg-gray-50";
+                                string rankText = entry.Rank.ToString();
+                                
+                                @if (entry.Rank == 1)
+                                {
+                                    rankText = "🥇";
+                                    rowClass = "bg-yellow-50 font-extrabold text-gray-900 border-l-4 border-yellow-600 transition hover:bg-yellow-100";
+                                }
+                                else if (entry.Rank == 2)
+                                {
+                                    rankText = "🥈";
+                                    rowClass = "bg-gray-50 font-semibold transition hover:bg-gray-100";
+                                }
+                                else if (entry.Rank == 3)
+                                {
+                                    rankText = "🥉";
+                                    rowClass = "bg-gray-100 font-medium transition hover:bg-gray-200";
+                                }
+
+                                <tr class="@rowClass">
+                                    <td class="text-center font-bold text-lg">@rankText</td>
+                                    <td class="text-left">
+                                        @if (entry.PlayerCount == 1)
+                                        {
+                                            // Chế độ SOLO
+                                            <div class="font-bold text-gray-800">@entry.Name</div>
+                                            <div class="text-xs text-gray-500 italic">Cá nhân</div>
+                                        }
+                                        else
+                                        {
+                                            // Chế độ MULTIPLAY
+                                            <div class="font-bold text-gray-900 mb-1">@entry.Name</div>
+                                            <div class="text-xs text-gray-600 space-x-2">
+                                                @foreach (var member in entry.TeamMembers)
+                                                {
+                                                    <span class="inline-block bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full font-medium ring-1 ring-blue-300/50 hover:bg-blue-100 hover:ring-blue-400 transition hover:scale-[1.02]">
+                                                        @member.Username
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
+                                    </td>
+                                    <td class="text-center text-green-600 font-bold">@entry.Score</td>
+                                    <td class="text-center text-red-600 font-bold">@entry.Duration</td> 
+                                    <td class="text-center text-gray-500">@entry.LastPlayedAt</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr class="text-center">
+                                <td colspan="5" class="text-gray-500 p-8">
+                                    <p class="text-lg font-semibold">Chưa có dữ liệu thành tích cho chế độ này.</p>
+                                    <p class="text-sm">Hãy là người đầu tiên chinh phục nó!</p>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                <div id="no-data-message" class="text-center text-gray-500 p-8 hidden">
+                    </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script>
+    // Hàm chuyển đổi độ khó từ chuỗi sang số nguyên (để tạo URL)
+    function difficultyToInteger(difficultyString) {
+        if (difficultyString === 'DỄ') return 1;
+        if (difficultyString === 'TRUNG BÌNH') return 2;
+        if (difficultyString === 'KHÓ') return 3;
+        return 1; // Mặc định
+    }
+
+    // Giá trị hiện tại được lấy từ Model C#
+    const currentMode = '@Model.SelectedModeInt';
+    const currentDifficultyInt = '@Model.SelectedDifficultyInt'; // Giá trị INT của difficulty
+    
+    // Xử lý sự kiện click Mode
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const newMode = this.dataset.mode;
+            // Dùng difficulty hiện tại (INT) để gửi đi
+            const newUrl = `?players=${newMode}&difficulty=${currentDifficultyInt}`;
+            window.location.href = newUrl;
+        });
+    });
+
+    // Xử lý sự kiện click Difficulty
+    document.querySelectorAll('.difficulty-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            // Lấy data-difficulty đã được gán là INT (1, 2, 3)
+            const newDifficultyInt = this.dataset.difficulty; 
+            
+            // Dùng mode hiện tại (INT) để gửi đi
+            const newUrl = `?players=${currentMode}&difficulty=${newDifficultyInt}`;
+            window.location.href = newUrl;
+        });
+    });
+</script>

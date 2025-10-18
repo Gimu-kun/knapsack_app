@@ -1,4 +1,4 @@
-namespace knapsack_app.Models.Models
+namespace knapsack_app.ViewModels
 {
     public class PlayHistoryApiViewModel
     {
@@ -6,7 +6,8 @@ namespace knapsack_app.Models.Models
         public int TakenScore { get; set; }
         public int TakenDuration { get; set; }
         public DateTime TakenAt { get; set; }
-        public bool IsMultiplay { get; set; }
+        public string TeamName { get; set; }
+        public string TeamId { get; set; }
         public DifficultyEnum ChallengeDifficulty { get; set; } 
     }
 }
