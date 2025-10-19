@@ -5,6 +5,11 @@ public class ItemDto
     public int Value { get; set; }
 }
 
+public class KnapsackItem : ItemDto
+{
+    public string Name { get; set; } = "Item";
+}
+
 public class KsChallengeCreationReqDto
 {
     public string Difficulty { get; set; }
