@@ -25,6 +25,16 @@ namespace knapsack_app.Pages.Cli
         // 1. DỮ LIỆU ĐẦU VÀO TỪ SERVER (INPUT DATA)
         // ======================================================================
 
+        [BindProperty(SupportsGet = true)] // Cho phép Model binding từ Query String
+        public int Players { get; set; } = 1;
+
+        [BindProperty(SupportsGet = true)] // Cho phép Model binding từ Query String
+        public int Difficulty { get; set; } = 1;
+
+        // Thuộc tính để lưu trữ ID thử thách, cần thiết cho API call
+        [BindProperty(SupportsGet = true)]
+        public string Challenge_id { get; set; } = string.Empty;
+        
         public GameData InputGameData { get; set; } = new GameData();
         public List<KnapsackItem> Items { get; set; } = new List<KnapsackItem>();
         public int[,] DPBoard { get; set; } = new int[0, 0];
@@ -33,9 +43,9 @@ namespace knapsack_app.Pages.Cli
         // 2. LOGIC XỬ LÝ: LẤY DỮ LIỆU TỪ API
         // ======================================================================
 
-        public async Task<IActionResult> OnGetAsync(string id)
+        public async Task<IActionResult> OnGetAsync()
         {
-            if (string.IsNullOrEmpty(id))
+            if (string.IsNullOrEmpty(Challenge_id))
             {
                 // Xử lý trường hợp không có ID (ví dụ: chuyển hướng hoặc trả về 404)
                 return RedirectToPage("/Error"); 
@@ -43,7 +53,7 @@ namespace knapsack_app.Pages.Cli
 
             try
             {
-                string apiUrl = $"{ApiBaseUrl}{id}";
+                string apiUrl = $"{ApiBaseUrl}{Challenge_id}";
                 HttpResponseMessage response = await _httpClient.GetAsync(apiUrl);
 
                 if (response.IsSuccessStatusCode)

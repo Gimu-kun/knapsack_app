@@ -1,4 +1,4 @@
-@page
+@page "/selection"
 @model knapsack_app.Pages.Cli.LoginModel
 @{
     Layout = "_Cli_Layout";
@@ -16,24 +16,23 @@
             </div>
 
             <div class="lg:col-span-3">
-
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-0">
-                    
                     <div class="p-5 border-2 border-blue-400 rounded-xl bg-white shadow-sm flex flex-col space-y-3 transition duration-300 hover:shadow-lg min-h-[220px]">
                         <div class="flex items-center justify-start">
                              <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4m8 0l-4 4m4-4l4 4"></path>
+                                 xmlns="http://www.w3.org/2000/svg">
+                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4m8 0l-4 4m4-4l4 4"></path>
                             </svg>
                         </div>
                         <p class="font-bold text-gray-900 text-base uppercase">EASY MODE</p>
                         <p class="text-sm text-gray-600 flex-grow">Giới hạn trọng lượng nhỏ. Tập trung vào logic cơ bản và điền bảng DP.</p>
                         
-                        <a href="#" class="mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-500 hover:bg-green-600 transition duration-300">
+                        <a href="#" 
+                           class="btn-select-difficulty mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-green-500 hover:bg-green-600 transition duration-300"
+                           data-difficulty="1" data-difficulty-name="Dễ">
                             Chọn
                         </a>
                     </div>
-
                     <div class="p-5 border-2 border-blue-400 rounded-xl bg-white shadow-sm flex flex-col space-y-3 transition duration-300 hover:shadow-lg min-h-[220px]">
                         <div class="flex items-center justify-start">
                             <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -44,11 +43,12 @@
                         <p class="font-bold text-gray-900 text-base uppercase">MEDIUM MODE</p>
                         <p class="text-sm text-gray-600 flex-grow">Trọng lượng trung bình. Yêu cầu tính toán nhanh hơn và truy vết giải pháp.</p>
                         
-                        <a href="#" class="mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-yellow-500 hover:bg-yellow-600 transition duration-300">
+                        <a href="#" 
+                           class="btn-select-difficulty mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-yellow-500 hover:bg-yellow-600 transition duration-300"
+                           data-difficulty="2" data-difficulty-name="Trung bình">
                             Chọn
                         </a>
                     </div>
-
                     <div class="p-5 border-2 border-blue-400 rounded-xl bg-white shadow-sm flex flex-col space-y-3 transition duration-300 hover:shadow-lg min-h-[220px]">
                         <div class="flex items-center justify-start">
                             <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -59,38 +59,121 @@
                         <p class="font-bold text-gray-900 text-base uppercase">HARD MODE</p>
                         <p class="text-sm text-gray-600 flex-grow">Giới hạn trọng lượng lớn và nhiều vật phẩm. Kiểm tra hiệu suất thuật toán.</p>
                         
-                        <a href="#" class="mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition duration-300">
+                        <a href="#" 
+                           class="btn-select-difficulty mt-4 inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition duration-300"
+                           data-difficulty="3" data-difficulty-name="Khó">
                             Chọn
                         </a>
                     </div>
                 </div>
-
                 <div class="mt-5 space-y-6">
-                    
                     <div class="col-span-full">
                         <a href="#" class="w-full inline-flex items-center justify-center px-8 py-4 border border-transparent text-lg font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300 shadow-xl uppercase tracking-wider">
                             <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             Tạo phòng mới
                         </a>
                     </div>
-                    
                     <div class="p-6 border-2 border-gray-200 rounded-xl bg-gray-50 shadow-md">
                         <p class="text-xl font-semibold text-gray-800 mb-4">Tham gia phòng</p>
                         <div class="flex flex-col sm:flex-row gap-4">
-                            <input type="text" placeholder="Nhập mã phòng..." 
+                            <input type="text" id="room-code-input" placeholder="Nhập mã phòng..." 
                                 class="flex-grow px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-gray-900 shadow-sm"
                                 model="Model.RoomCode" />
                             
-                            <a href="#" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition duration-300 shadow-md">
+                            <a href="#" id="btn-join-room" class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition duration-300 shadow-md">
                                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path></svg>
                                 Vào phòng
                             </a>
                         </div>
                     </div>
                 </div>
-
             </div>
 
         </div>
     </div>
 </section>
+
+@section Scripts {
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> {{-- Đảm bảo jQuery đã được thêm --}}
+<script>
+    $(document).ready(function () {
+        // Xử lý sự kiện click cho các nút chọn độ khó
+        $('.btn-select-difficulty').on('click', async function (e) {
+            e.preventDefault();
+            
+            // Lấy thông tin độ khó từ thuộc tính data
+            const difficultyInt = $(this).data('difficulty');
+            const difficultyName = $(this).data('difficulty-name');
+            const apiEndpoint = `/api/Challenge/random?difficulty=${difficultyInt}`;
+            const button = $(this);
+            
+            // Xác nhận với người dùng
+            if (!confirm(`Bạn có chắc chắn muốn chọn độ khó ${difficultyName} (Mode ${difficultyInt}) và bắt đầu chơi?`)) {
+                return; // Người dùng hủy bỏ
+            }
+
+            // Vô hiệu hóa nút để tránh click kép
+            button.prop('disabled', true).text('Đang tải...');
+
+            try {
+                // Gọi API để lấy đề bài ngẫu nhiên
+                const response = await fetch(apiEndpoint, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Cần thêm header Authorization nếu API yêu cầu token
+                        // 'Authorization': 'Bearer ' + localStorage.getItem('authToken') 
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const challengeId = data.id;
+
+                    // Chuyển hướng đến trang chơi game
+                    // players=1 (mặc định 1 người chơi)
+                    // difficulty={difficultyInt}
+                    // challenge_id={challengeId}
+                    const redirectUrl = `/play?players=1&difficulty=${difficultyInt}&challenge_id=${challengeId}`;
+                    window.location.href = redirectUrl;
+
+                } else if (response.status === 404) {
+                    const errorData = await response.json();
+                    alert(`Lỗi: ${errorData.message || 'Không tìm thấy đề bài nào cho độ khó này.'}`);
+                } else {
+                    // Xử lý các lỗi khác (400 Bad Request, 500 Internal Server Error)
+                    const errorData = await response.json();
+                    alert(`Lỗi khi lấy đề bài: ${errorData.message || 'Đã xảy ra lỗi không xác định.'}`);
+                }
+            } catch (error) {
+                console.error('Lỗi API:', error);
+                alert('Lỗi kết nối hoặc xử lý dữ liệu.');
+            } finally {
+                // Khôi phục nút sau khi xử lý lỗi
+                button.prop('disabled', false).text('Chọn');
+            }
+        });
+        
+        // Bạn cũng có thể muốn thêm logic cho nút "Vào phòng" ở đây để xử lý
+        // tham gia phòng với một challengeId cụ thể (nếu mã phòng chính là challengeId)
+        $('#btn-join-room').on('click', async function(e) {
+            e.preventDefault();
+            const roomCode = $('#room-code-input').val().trim();
+            if (roomCode.length === 0) {
+                alert('Vui lòng nhập mã phòng.');
+                return;
+            }
+            
+            // Giả định: Khi tham gia phòng, độ khó sẽ được lấy từ challengeId
+            // Tuy nhiên, vì API /random/{difficulty} yêu cầu độ khó, ta sẽ tạm thời 
+            // chuyển hướng với ID, và trang PlayGame sẽ phải tự fetch độ khó.
+            // Hoặc đơn giản là chuyển hướng đến trang phòng chờ/game
+            // (Tuỳ thuộc vào cách bạn thiết kế logic phòng chờ)
+            // Ví dụ:
+            // window.location.href = `/playgame?players=2&room_id=${roomCode}`;
+            
+            alert('Chức năng "Tham gia phòng" cần được triển khai logic phòng chờ/multiplayer.');
+        });
+    });
+</script>
+}

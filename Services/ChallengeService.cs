@@ -88,13 +88,13 @@ namespace knapsack_app.Services
 
             List<(int x, int y, int value)> validCells = new List<(int x, int y, int value)>();
 
-            for (int i = 1; i < N; i++) 
+            for (int i = 1; i < N; i++)
             {
                 if (dpBoard[i] == null) continue;
-                for (int j = 1; j < W; j++) 
+                for (int j = 1; j < W; j++)
                 {
                     // Loại trừ ô kết quả cuối cùng (N-1, W) nếu N-1 là hàng cuối
-                    if (i == N - 1 && j == W) continue; 
+                    if (i == N - 1 && j == W) continue;
                     validCells.Add((i, j, dpBoard[i][j]));
                 }
             }
@@ -134,18 +134,18 @@ namespace knapsack_app.Services
         // ... [GetPaginatedChallengesAsync] (Không đổi) ...
         public async Task<(IEnumerable<ChallengeViewModel> Challenges, int TotalCount)> GetPaginatedChallengesAsync(int pageIndex, int pageSize, string searchTerm)
         {
-             var query = _context.KsChallenge.AsNoTracking();
+            var query = _context.KsChallenge.AsNoTracking();
 
             if (!string.IsNullOrEmpty(searchTerm))
             {
                 // Tìm kiếm theo ID hoặc độ khó (chuyển đổi enum sang chuỗi)
-                query = query.Where(c => 
-                    c.Id.Contains(searchTerm) || 
+                query = query.Where(c =>
+                    c.Id.Contains(searchTerm) ||
                     EF.Functions.Like(c.Difficulty.ToString(), $"%{searchTerm}%"));
             }
 
             var totalCount = await query.CountAsync();
-            
+
             var challenges = await query
                 .OrderBy(c => c.Difficulty)
                 .ThenByDescending(c => c.CreatedAt)
@@ -172,7 +172,7 @@ namespace knapsack_app.Services
             var challenge = await _context.KsChallenge
                 .AsNoTracking()
                 .FirstOrDefaultAsync(c => c.Id == id);
-            
+
             if (challenge == null) return null;
 
             return new ChallengeCreateEditModel
@@ -201,13 +201,13 @@ namespace knapsack_app.Services
             try
             {
                 items = JsonSerializer.Deserialize<List<ItemDto>>(model.QuesDataJson) ?? throw new Exception("Dữ liệu vật phẩm rỗng hoặc không hợp lệ.");
-                
+
                 // Đảm bảo mỗi vật phẩm có ID riêng
                 foreach (var item in items.Where(item => string.IsNullOrEmpty(item.Id)))
                 {
                     item.Id = Guid.NewGuid().ToString();
                 }
-                
+
                 // Cập nhật lại QuesDataJson với các Id đã được gán (quan trọng cho trường hợp chỉnh sửa)
                 model.QuesDataJson = JsonSerializer.Serialize(items);
             }
@@ -223,12 +223,12 @@ namespace knapsack_app.Services
             var missingCells = GenerateMissingCells(dpBoardArray, model.MissCount);
 
             // 4. Serialization (SỬ DỤNG int[][])
-            model.DpBoardJson = JsonSerializer.Serialize(dpBoardArray); 
+            model.DpBoardJson = JsonSerializer.Serialize(dpBoardArray);
             model.ResultItemsJson = JsonSerializer.Serialize(selectedItems);
             model.MissArrayJson = JsonSerializer.Serialize(missingCells);
 
             // 5. Entity Mapping & Saving
-            var newChallenge = new KsChallengeModel 
+            var newChallenge = new KsChallengeModel
             {
                 Difficulty = model.Difficulty,
                 MaxCapacity = model.MaxCapacity,
@@ -240,8 +240,8 @@ namespace knapsack_app.Services
                 MissArray = model.MissArrayJson,
                 CreatedAt = DateTime.Now,
                 UpdatedAt = DateTime.Now,
-                CreatedBy = userId, 
-                UpdatedBy = userId 
+                CreatedBy = userId,
+                UpdatedBy = userId
             };
 
             _context.KsChallenge.Add(newChallenge);
@@ -271,17 +271,17 @@ namespace knapsack_app.Services
             existingChallenge.DpBoard = model.DpBoardJson;
             existingChallenge.ResultItems = model.ResultItemsJson;
             existingChallenge.MissArray = model.MissArrayJson;
-            
+
             existingChallenge.UpdatedAt = DateTime.Now;
             // SỬ DỤNG userId TỪ CONTROLLER (model.CreatedBy) cho UpdatedBy
-            existingChallenge.UpdatedBy = userId; 
+            existingChallenge.UpdatedBy = userId;
 
-            _context.KsChallenge.Update(existingChallenge); 
+            _context.KsChallenge.Update(existingChallenge);
             await _context.SaveChangesAsync();
         }
 
         // ... [DeleteChallengeAsync] (Không đổi) ...
-         public async Task DeleteChallengeAsync(string id)
+        public async Task DeleteChallengeAsync(string id)
         {
             var challenge = await _context.KsChallenge.FindAsync(id);
             if (challenge != null)
@@ -295,6 +295,70 @@ namespace knapsack_app.Services
         public async Task<bool> ExistsAsync(string id)
         {
             return await _context.KsChallenge.AnyAsync(c => c.Id == id);
+        }
+
+        #endregion
+
+        #region Retrieval Logic
+
+        /// <summary>
+        /// Lấy một đề bài cụ thể theo ID và độ khó, hoặc một đề bài ngẫu nhiên theo độ khó.
+        /// </summary>
+        /// <param name="difficulty">Độ khó cần tìm.</param>
+        /// <param name="challengeId">ID đề bài (tùy chọn). Nếu có, sẽ tìm theo cả ID và Difficulty.</param>
+        /// <returns>ChallengeCreateEditModel chứa dữ liệu đề bài, hoặc null.</returns>
+        public async Task<ChallengeCreateEditModel?> GetRandomOrSpecificChallengeAsync(
+            DifficultyEnum difficulty, string? challengeId)
+        {
+            IQueryable<KsChallengeModel> query = _context.KsChallenge
+                .AsNoTracking()
+                .Where(c => c.Difficulty == difficulty);
+
+            KsChallengeModel? challenge;
+
+            if (!string.IsNullOrEmpty(challengeId))
+            {
+                // Trường hợp 1: Có ID, tìm kiếm chính xác theo ID và Difficulty
+                challenge = await query.FirstOrDefaultAsync(c => c.Id == challengeId);
+            }
+            else
+            {
+                // Trường hợp 2: Không có ID, lấy ngẫu nhiên theo Difficulty
+
+                // Lấy tổng số lượng đề bài có cùng độ khó
+                var totalCount = await query.CountAsync();
+
+                if (totalCount == 0)
+                {
+                    return null; // Không có đề bài nào
+                }
+
+                // Chọn một offset ngẫu nhiên
+                var skipCount = _rng.Next(totalCount);
+
+                // Lấy đề bài tại vị trí ngẫu nhiên đó (sắp xếp theo Id hoặc CreatedAt để đảm bảo thứ tự)
+                challenge = await query
+                    .OrderBy(c => c.Id) // Sắp xếp theo ID để có thứ tự cố định khi chọn ngẫu nhiên
+                    .Skip(skipCount)
+                    .Take(1)
+                    .FirstOrDefaultAsync();
+            }
+
+            if (challenge == null) return null;
+
+            // Chuyển đổi Entity sang ChallengeCreateEditModel
+            return new ChallengeCreateEditModel
+            {
+                Id = challenge.Id,
+                Difficulty = challenge.Difficulty,
+                MaxCapacity = challenge.MaxCapacity ?? 0,
+                MaxDuration = challenge.MaxDuration ?? 0,
+                MissCount = challenge.MissCount ?? 0,
+                QuesDataJson = challenge.QuesData,
+                DpBoardJson = challenge.DpBoard,
+                ResultItemsJson = challenge.ResultItems ?? "[]",
+                MissArrayJson = challenge.MissArray ?? "[]"
+            };
         }
 
         #endregion

@@ -1,7 +1,7 @@
 using knapsack_app.ViewModels;
 using knapsack_app.Services;
 using Microsoft.AspNetCore.Mvc;
-using System.Net; 
+using System.Net;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,12 +10,12 @@ using System.Collections.Generic; // Cần thêm namespace này
 namespace knapsack_app.Controllers
 {
     // Đổi tên thành ChallengeController cho nhất quán
-    [Route("api/[controller]")] 
+    [Route("api/[controller]")]
     [ApiController]
     public class ChallengeController : ControllerBase
     {
         private readonly ChallengeService _challengeService;
-        
+
         // ĐÃ LOẠI BỎ: private const string CurrentUserId = "API_Admin"; 
 
         public ChallengeController(ChallengeService challengeService)
@@ -32,7 +32,7 @@ namespace knapsack_app.Controllers
             public int MaxDuration { get; set; }
             public int MissCount { get; set; }
             public DateTime CreatedAt { get; set; }
-            public string CreatedBy { get; set; } = "ADMIN"; 
+            public string CreatedBy { get; set; } = "ADMIN";
         }
 
         // --- 1. Lấy danh sách đề bài (GET) ---
@@ -40,8 +40,8 @@ namespace knapsack_app.Controllers
         [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         public async Task<IActionResult> GetPaginatedChallenges(
-            [FromQuery] int pageIndex = 1, 
-            [FromQuery] int pageSize = 10, 
+            [FromQuery] int pageIndex = 1,
+            [FromQuery] int pageSize = 10,
             [FromQuery] string? searchTerm = "")
         {
             // Thêm kiểm tra validation đơn giản cho tham số query
@@ -56,7 +56,7 @@ namespace knapsack_app.Controllers
             var apiChallenges = challenges.Select(c => new ChallengeApiViewModel
             {
                 Id = c.Id,
-                Difficulty = (int)c.Difficulty, 
+                Difficulty = (int)c.Difficulty,
                 MaxCapacity = c.MaxCapacity,
                 MaxDuration = c.MaxDuration,
                 MissCount = c.MissCount,
@@ -64,7 +64,7 @@ namespace knapsack_app.Controllers
                 CreatedBy = c.CreatedBy
             }).ToList();
 
-            return Ok(new 
+            return Ok(new
             {
                 Challenges = apiChallenges,
                 TotalCount = totalCount,
@@ -85,9 +85,9 @@ namespace knapsack_app.Controllers
             {
                 return NotFound($"Không tìm thấy đề bài với ID: {id}");
             }
-            
+
             // Trả về đối tượng ẩn danh để đảm bảo Difficulty luôn là int trong JSON response
-            return Ok(new 
+            return Ok(new
             {
                 challenge.Id,
                 Difficulty = (int)challenge.Difficulty,
@@ -100,9 +100,9 @@ namespace knapsack_app.Controllers
                 challenge.MissArrayJson
             });
         }
-        
+
         // --- 3. TẠO đề bài mới (POST) ---
-        
+
         /// <summary>
         /// Tạo đề bài mới. Tự động tính toán bảng DP, kết quả và lỗ hổng.
         /// POST: api/Challenge
@@ -132,7 +132,7 @@ namespace knapsack_app.Controllers
             try
             {
                 // 2. Gọi Service, sử dụng ID người tạo được truyền vào từ body
-                var newId = await _challengeService.CreateChallengeAsync(model, adminId); 
+                var newId = await _challengeService.CreateChallengeAsync(model, adminId);
 
                 // 3. Phản hồi thành công
                 // Trả về 201 Created và link để lấy chi tiết tài nguyên mới tạo
@@ -147,8 +147,8 @@ namespace knapsack_app.Controllers
             {
                 // Xử lý lỗi hệ thống chung
                 var baseException = ex.GetBaseException();
-                return StatusCode((int)HttpStatusCode.InternalServerError, new 
-                { 
+                return StatusCode((int)HttpStatusCode.InternalServerError, new
+                {
                     Message = $"Đã xảy ra lỗi server khi tạo đề bài. {baseException.Message}",
                     Detail = baseException.ToString()
                 });
@@ -156,7 +156,7 @@ namespace knapsack_app.Controllers
         }
 
         // --- 4. Cập nhật đề bài (PUT) ---
-        
+
         /// <summary>
         /// Cập nhật đề bài hiện có.
         /// PUT: api/Challenge
@@ -206,11 +206,65 @@ namespace knapsack_app.Controllers
             {
                 await _challengeService.DeleteChallengeAsync(id);
                 // Trả về 204 ngay cả khi không tìm thấy, vì mục tiêu là đảm bảo nó bị xóa (Idempotency)
-                return NoContent(); 
+                return NoContent();
             }
             catch (Exception)
             {
                 return StatusCode((int)HttpStatusCode.InternalServerError, new { Message = $"Đã xảy ra lỗi khi xóa đề bài ID '{id}'." });
+            }
+        }
+
+        [HttpGet("random")]
+        [ProducesResponseType(typeof(object), (int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.NotFound)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public async Task<IActionResult> GetRandomOrSpecificChallenge(
+        [FromQuery] int difficulty,
+        [FromQuery] string? challengeId = null)
+        {
+            // 1. Validation và Chuyển đổi sang Enum
+            if (!Enum.IsDefined(typeof(DifficultyEnum), difficulty))
+            {
+                return BadRequest($"Giá trị độ khó '{difficulty}' không hợp lệ. Vui lòng sử dụng 1 (easy), 2 (medium), hoặc 3 (hard).");
+            }
+
+            var difficultyEnum = (DifficultyEnum)difficulty;
+
+            try
+            {
+                var challenge = await _challengeService
+                    .GetRandomOrSpecificChallengeAsync(difficultyEnum, challengeId);
+
+                if (challenge == null)
+                {
+                    if (!string.IsNullOrEmpty(challengeId))
+                    {
+                        return NotFound($"Không tìm thấy đề bài với ID '{challengeId}' có độ khó '{difficultyEnum}'.");
+                    }
+                    return NotFound($"Hiện tại chưa có đề bài nào với độ khó '{difficultyEnum}'.");
+                }
+
+                // Trả về đối tượng ẩn danh, đảm bảo Difficulty luôn là int trong JSON response
+                return Ok(new
+                {
+                    challenge.Id,
+                    Difficulty = (int)challenge.Difficulty, // Trả về dạng int
+                    challenge.MaxCapacity,
+                    challenge.MaxDuration,
+                    challenge.MissCount,
+                    challenge.QuesDataJson,
+                    challenge.DpBoardJson,
+                    challenge.ResultItemsJson,
+                    challenge.MissArrayJson
+                });
+            }
+            catch (Exception ex)
+            {
+                var baseException = ex.GetBaseException();
+                return StatusCode((int)HttpStatusCode.InternalServerError, new
+                {
+                    Message = $"Đã xảy ra lỗi server khi lấy đề bài. {baseException.Message}"
+                });
             }
         }
     }
