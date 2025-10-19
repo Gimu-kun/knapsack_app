@@ -15,22 +15,12 @@
     var challengeId = Model.Challenge_id;
     var gameData = Model.InputGameData;
     var items = Model.Items;
-
     var capacity = gameData.MaxCapacity;
     var dpRows = Model.DPBoard.GetLength(0);
     var dpCols = Model.DPBoard.GetLength(1);
-    
-    // LẤY DANH SÁCH CÁC Ô BỊ ĐỤC LỖ (Interactive Cells) TỪ MissArray
-    // Giả định X là hàng (i), Y là cột (w)
     var missedCells = Model.MissArray.Select(c => (c.X, c.Y)).ToHashSet();
     var interactiveCellsCount = missedCells.Count;
-
-    // LẤY THỜI GIAN TỐI ĐA ĐỂ HIỂN THỊ BAN ĐẦU
     var maxDurationDisplay = gameData.MaxDuration;
-}
-
-@* Hàm helper để format thời gian ban đầu *@
-@{
     Func<int, string> formatTime = (totalSeconds) => {
         var minutes = totalSeconds / 60;
         var seconds = totalSeconds % 60;
@@ -63,20 +53,9 @@
 <body class="bg-gray-100 text-gray-800 pt-16 font-[Inter]">
 
     <div id="utility-toolbar" class="fixed top-1/2 left-0 transform -translate-y-1/2 ml-4 z-50 flex flex-col space-y-3">
-        <button id="reset-game-btn" class="utility-btn bg-red-500 text-white hover:bg-red-600" title="Reset Game (Xóa hết vật phẩm)">
-            <span class="material-symbols-outlined">
-                tv_options_edit_channels
-            </span>
-        </button>
-        <button id="toggle-dp-btn" class="utility-btn bg-purple-500 text-white hover:bg-purple-600" title="Ẩn/Hiện Bảng DP">
+        <button id="reveal-cell-button" class="utility-btn bg-purple-500 text-white hover:bg-purple-600" title="🗝️Tiết Lộ Ô DP (Cost: 1000)">
             <span class="material-symbols-outlined">
             stylus_fountain_pen
-            </span>
-        </button>
-        <button id="guide-btn" class="utility-btn bg-blue-500 text-white 
-            hover:bg-blue-600" title="Xem Hướng Dẫn">
-            <span class="material-symbols-outlined">
-            flash_on
             </span>
         </button>
     </div>
@@ -86,31 +65,41 @@
             <h1 class="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight sm:text-4xl">
                 KNAPSACK 0/1: <span class="text-blue-600">MISSION @challengeId</span>
             </h1>
-            {{-- Thay đổi grid từ 4 cột sang 5 cột để chứa Timer --}}
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm font-semibold uppercase">
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-sm font-semibold uppercase">
+                
+                <div class="p-3 bg-indigo-50 rounded-lg text-indigo-800">
+                    <span class="block text-xs font-normal text-gray-500">Điểm Hiện Tại</span>
+                    <span id="current-score" class="text-2xl font-bold">0</span>
+                </div>
+                
                 <div class="p-3 bg-blue-50 rounded-lg text-blue-800">
-                    <span class="block text-xs font-normal text-gray-500">Max Capacity (W)</span>
-                    <span class="text-2xl font-bold">@gameData.MaxCapacity</span> kg
+                    <span class="block text-xs font-normal text-gray-500">Sức chứa (W)</span>
+                    <span class="text-2xl font-bold">@gameData.MaxCapacity</span>
                 </div>
                 <div class="p-3 bg-green-50 rounded-lg text-green-800">
-                    <span class="block text-xs font-normal text-gray-500">Max Duration</span>
-                    <span class="text-2xl font-bold">@maxDurationDisplay</span> secs
+                    <span class="block text-xs font-normal text-gray-500">Thời lượng</span>
+                    <span class="text-2xl font-bold">@formatTime(maxDurationDisplay)</span>
                 </div>
                 <div class="p-3 bg-red-50 rounded-lg text-red-800">
-                    <span class="block text-xs font-normal text-gray-500">Miss Count (Lỗi tối đa)</span>
-                    <span class="text-2xl font-bold">@gameData.MissCount</span> lần
+                    <span class="block text-xs font-normal text-gray-500">Số ô khuyết</span>
+                    <span class="text-2xl font-bold">@gameData.MissCount</span> ô
                 </div>
                 <div class="p-3 bg-yellow-50 rounded-lg text-yellow-800">
-                    <span class="block text-xs font-normal text-gray-500">Difficulty</span>
-                    <span class="text-2xl font-bold">@gameData.Difficulty</span>
+                    <span class="block text-xs font-normal text-gray-500">Độ khó</span>
+                    <span class="text-2xl font-bold">@(
+                        gameData.Difficulty == 1 ? "Dễ" : 
+                        gameData.Difficulty == 2 ? "Trung Bình" : 
+                        "Khó"
+                    )</span>
                 </div>
                 <div id="timer-container" class="p-3 bg-gray-200 rounded-lg text-red-800">
                     <span class="block text-xs font-normal text-gray-500">Thời Gian Còn Lại</span>
                     <span id="game-timer" class="text-2xl font-extrabold">
-                        @formatTime(maxDurationDisplay) @* Hiển thị thời gian tối đa ban đầu *@
+                        @formatTime(maxDurationDisplay)
                     </span>
                 </div>
-                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -158,7 +147,7 @@
                                     @foreach (var item in items)
                                     {
                                         <td class="px-4 py-2 text-red-600 font-semibold border-t border-l border-gray-200">
-                                            @item.Weight kg
+                                            @item.Weight 
                                         </td>
                                     }
                                 </tr>
@@ -197,8 +186,8 @@ V_i: Giá trị của Item i
 
     Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
     DP[i][w] = max(
-    DP[i-1][w],                         // TH1: Không chọn Item i
-    V_i + DP[i-1][w - W_i]              // TH2: Chọn Item i
+    DP[i-1][w],                         // TH1: Không chọn Item i
+    V_i + DP[i-1][w - W_i]              // TH2: Chọn Item i
     )
 (Lấy giá trị lớn nhất giữa việc KHÔNG chọn và CÓ chọn Item i)
                             </pre>
@@ -342,6 +331,8 @@ V_i: Giá trị của Item i
     </main>
 
     <script>
+        const API_BASE_URL = '/api/Game/AdjustScore';
+        let takenId = null;
         const knapsack = document.getElementById('knapsack-dropzone');
         const itemsContainer = document.getElementById('drag-items-container');
         const maxCapacity = @gameData.MaxCapacity;
@@ -355,21 +346,93 @@ V_i: Giá trị của Item i
         const dpBoardBody = document.getElementById('dp-board-body');
         const startScreen = document.getElementById('start-screen');
         const startGameBtn = document.getElementById('start-game-btn');
-        const toggleDpBtn = document.getElementById('toggle-dp-btn');
+        const revealButton = document.getElementById('reveal-cell-button');
         const resetGameBtn = document.getElementById('reset-game-btn');
         const challengeId = '@challengeId'; // Lấy Challenge ID từ Razor
+
+        // Điểm thưởng/phạt
+        const SCORE_CORRECT = 500;
+        const SCORE_INCORRECT = -100;
+        const REVEAL_COST = 1000;
         
+        const scoreElement = document.getElementById('current-score');
+
+        async function adjustScoreOnServer(scoreChange) {
+            if (!takenId) {
+                console.error("Lỗi: Không tìm thấy Taken ID.");
+                return;
+            }
+
+            try {
+                const response = await fetch(API_BASE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        takenId: takenId,
+                        scoreChange: scoreChange
+                    })
+                });
+
+                const data = await response.json();
+                console.log(data);
+                if (response.ok && data.success) {
+                    console.log(`Điểm đã được điều chỉnh. Điểm mới: ${data.newScore}`);
+                    
+                    // Cập nhật điểm trên UI
+                    if (scoreElement) {
+                        scoreElement.textContent = data.newScore;
+                    }
+                    
+                    // Hiển thị thông báo hoặc hiệu ứng thành công/thất bại trên UI
+                    showScoreFeedback(scoreChange);
+                } else {
+                    console.error("Lỗi điều chỉnh điểm từ Server:", data.message || "Lỗi không xác định");
+                    alert(`Lỗi Server: ${data.message || 'Không thể điều chỉnh điểm.'}`);
+                }
+            } catch (error) {
+                console.error("Lỗi kết nối API điều chỉnh điểm:", error);
+                alert("Lỗi kết nối khi điều chỉnh điểm. Vui lòng kiểm tra mạng.");
+            }
+        }
+
+        function showScoreFeedback(scoreChange) {
+            // Đây là ví dụ về hiệu ứng nổi (floating effect)
+            const feedback = document.createElement('div');
+            feedback.textContent = (scoreChange > 0 ? '+' : '') + scoreChange;
+            feedback.className = 'score-feedback'; 
+            
+            // Thêm class màu sắc
+            if (scoreChange > 0) {
+                feedback.classList.add('score-correct');
+            } else {
+                feedback.classList.add('score-incorrect');
+            }
+
+            document.body.appendChild(feedback);
+
+            // Thiết lập vị trí (ví dụ: ở góc trên bên phải)
+            feedback.style.top = `${scoreElement.offsetTop}px`;
+            feedback.style.left = `${scoreElement.offsetLeft + scoreElement.offsetWidth / 2}px`;
+            
+            // Xóa sau khi hoàn thành animation
+            setTimeout(() => {
+                feedback.remove();
+            }, 1500); 
+        }
+
         let totalWeight = 0;
         let totalValue = 0;
         
         // ===============================================
-        // LOGIC BỘ ĐẾM THỜI GIAN (SERVER-SIDE TIMER LOGIC)
+        // KHAI BÁO BIẾN CHO TIMER VÀ LOGIC POLLING MỚI
         // ===============================================
         let timerInterval;
         const timerDisplay = document.getElementById('game-timer');
         const timerContainer = document.getElementById('timer-container');
         
-        let deadlineTime = null; // Thời điểm hết hạn (UTC) được Server trả về
+        let currentTakenId = null;
 
         // Hàm định dạng thời gian (MM:SS)
         function formatTime(totalSeconds) {
@@ -379,7 +442,7 @@ V_i: Giá trị của Item i
             return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
         
-        // Hàm xử lý khi hết thời gian
+        // Hàm xử lý khi hết thời gian (hoặc Server thông báo hết giờ)
         function challengeFailedByTime() {
             gameActive = false;
             // Dừng bộ đếm
@@ -388,53 +451,95 @@ V_i: Giá trị của Item i
             // Vô hiệu hóa input và drag/drop
             dpBoardBody.querySelectorAll('.dp-input').forEach(input => input.disabled = true);
             itemsContainer.querySelectorAll('.drag-item').forEach(item => item.setAttribute('draggable', 'false'));
+            knapsack.removeEventListener('drop', handleDropKnapsack); // Ngăn không cho drop nữa
             
             // Cập nhật giao diện
             timerDisplay.textContent = formatTime(0);
-            timerContainer.classList.remove('bg-red-100', 'animate-pulse');
+            timerContainer.classList.remove('bg-red-100', 'animate-pulse', 'bg-green-100', 'text-green-800');
             timerContainer.classList.add('bg-gray-600', 'text-white');
             
-            alert(`⌛ THỬ THÁCH THẤT BẠI! Đã hết thời gian quy định. Vui lòng thử lại!`);
+            alert(`⌛ THỬ THÁCH THẤT BẠI! Đã hết thời gian quy định theo Server. Vui lòng thử lại!`);
         }
 
-        // Hàm bắt đầu đếm ngược DỰA TRÊN SERVER DEADLINE
-        function startTimerWithDeadline(deadlineUtc) {
-            // Chuyển chuỗi ISO 8601 từ Server thành đối tượng Date
-            deadlineTime = new Date(deadlineUtc);
-            
+        // =======================================================
+        // LOGIC BỘ ĐẾM THỜI GIAN (POLLING SERVER LOGIC)
+        // =======================================================
+
+        // Hàm bắt đầu đếm ngược DỰA TRÊN POLLING SERVER
+        function startServerPollingTimer(takenId) {
+            currentTakenId = takenId; // Lưu Taken ID
+
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
             
-            timerInterval = setInterval(() => {
-                const nowUtc = new Date();
-                // Tính toán thời gian còn lại (milliseconds)
-                const timeRemainingMs = deadlineTime.getTime() - nowUtc.getTime();
-                // Chuyển sang giây (làm tròn lên để đảm bảo đếm hết giây cuối cùng)
-                let timeRemainingSeconds = Math.max(0, Math.ceil(timeRemainingMs / 1000)); 
-
-                if (timeRemainingSeconds <= 0) {
+            // Hàm gọi API để lấy thời gian còn lại
+            async function fetchTimeRemaining() {
+                // Kiểm tra takenId trước khi gọi API
+                if (!currentTakenId) {
+                    console.error("Lỗi: Không có Taken ID để gọi Status API.");
                     clearInterval(timerInterval);
-                    timerDisplay.textContent = formatTime(0);
-                    challengeFailedByTime();
                     return;
                 }
 
-                timerDisplay.textContent = formatTime(timeRemainingSeconds);
-                
-                // Cảnh báo khi còn 60 giây cuối cùng
-                if (timeRemainingSeconds <= 60 && timeRemainingSeconds > 0) {
-                    timerContainer.classList.remove('bg-green-100', 'text-green-800');
-                    timerContainer.classList.add('bg-red-100', 'animate-pulse', 'text-red-800');
-                } else if (timeRemainingSeconds > 60) {
-                    // Trạng thái bình thường sau khi start game
-                    timerContainer.classList.remove('bg-gray-200', 'text-red-800', 'bg-red-100', 'animate-pulse');
-                    timerContainer.classList.add('bg-green-100', 'text-green-800');
+                try {
+                    const response = await fetch(`/api/Game/Status/${currentTakenId}`, {
+                        method: 'GET',
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) {
+                        // Nếu server trả về lỗi 404 (Không tìm thấy session) hoặc 500
+                        throw new Error(`Server status check failed: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    
+                    let timeRemainingSeconds = result.timeRemaining;
+                    let isTimeUp = result.isTimeUp; // Lấy trạng thái hết giờ từ Server
+                    console.log("Thời gian",timeRemainingSeconds)   
+                    if (isTimeUp) {
+                        clearInterval(timerInterval);
+                        timerDisplay.textContent = formatTime(0);
+                        challengeFailedByTime();
+                        return;
+                    }
+
+                    // Cập nhật hiển thị bằng giá trị từ Server
+                    timerDisplay.textContent = formatTime(timeRemainingSeconds);
+                    
+                    // Cập nhật giao diện cảnh báo
+                    if (timeRemainingSeconds <= 60 && timeRemainingSeconds > 0) {
+                        timerContainer.classList.remove('bg-green-100', 'text-green-800', 'bg-gray-200');
+                        timerContainer.classList.add('bg-red-100', 'animate-pulse', 'text-red-800');
+                    } else if (timeRemainingSeconds > 60) {
+                        timerContainer.classList.remove('bg-gray-200', 'text-red-800', 'bg-red-100', 'animate-pulse');
+                        timerContainer.classList.add('bg-green-100', 'text-green-800');
+                    } else {
+                        // Trường hợp hiển thị ban đầu (maxDuration)
+                        timerContainer.classList.remove('bg-green-100', 'text-green-800', 'bg-red-100', 'animate-pulse');
+                        timerContainer.classList.add('bg-gray-200', 'text-red-800');
+                    }
+
+                } catch (error) {
+                    console.error("Lỗi khi polling Server Status:", error);
+                    // Dừng polling và thông báo lỗi nghiêm trọng
+                    if (timerInterval) clearInterval(timerInterval); 
+                    timerDisplay.textContent = "Lỗi Server";
+                    timerContainer.classList.add('bg-gray-500', 'text-white');
+                    gameActive = false;
                 }
-                
-            }, 1000); // Cập nhật mỗi giây
+            }
+            
+            // Thực hiện lần đầu ngay lập tức
+            fetchTimeRemaining();
+
+            // Thiết lập polling mỗi giây (1000ms)
+            timerInterval = setInterval(fetchTimeRemaining, 1000); 
         }
-        
+
         // Logic để gọi API bắt đầu game
         if (startGameBtn && startScreen) {
             startGameBtn.addEventListener('click', async () => {
@@ -443,10 +548,17 @@ V_i: Giá trị của Item i
                 startGameBtn.textContent = 'Đang tải...';
 
                 try {
+                    // Lấy token CSRF
+                    const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                    if (!antiForgeryToken) {
+                         throw new Error("Không tìm thấy Anti-Forgery Token. Vui lòng kiểm tra Razor Page.");
+                    }
                     
+                    // Chuẩn bị request body (Giả định UserId là cố định cho mục đích demo)
                     const requestBody = {
                         ChallengeId: challengeId,
-                        UserId: "@Model.userId",
+                        // Trong thực tế, UserId nên lấy từ Session/Token, không nên dựa vào FE gửi lên.
+                        UserId: '@Model.userId', 
                         PlayerCount: 1 
                     };
 
@@ -464,10 +576,9 @@ V_i: Giá trị của Item i
                     if (response.ok && result.success) {
                         gameActive = true;
                         startScreen.style.display = 'none';
-                        
-                        // Bắt đầu đếm ngược dựa trên thời điểm Server trả về
-                        startTimerWithDeadline(result.deadline); 
-                        
+                        takenId = result.takenId;
+                        // BẮT ĐẦU ĐẾM NGƯỢC DỰA TRÊN POLLING SERVER (Taken ID)
+                        startServerPollingTimer(result.takenId); // <--- ĐÃ SỬ DỤNG LOGIC MỚI
                         
                     } else {
                         // Hiển thị lỗi từ Server
@@ -481,6 +592,128 @@ V_i: Giá trị của Item i
                     alert(`Lỗi mạng hoặc hệ thống: ${error.message}`);
                     startGameBtn.disabled = false;
                     startGameBtn.textContent = '🔥 BẮT ĐẦU TRÒ CHƠI';
+                }
+            });
+        }
+
+        function checkAllCellsCompletedAndEndGame() {
+            // 1. Đếm tất cả các ô input chưa được hoàn thành
+            const remainingInputCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]').length;
+
+            if (remainingInputCells === 0) {
+                // Tất cả các ô đã hoàn thành (qua nhập tay hoặc tiết lộ)
+                console.log("Tất cả ô input DP đã được hoàn thành. Tiến hành kết thúc game.");
+                // 2. GỌI HÀM KẾT THÚC GAME CỦA BẠN
+                // Ví dụ: endGame(true, 'DPBoardCompleted');
+                if (typeof endGame === 'function') {
+                    endGame(true, 'DPBoardCompleted'); 
+                } else {
+                    alert("Game Over: Bảng DP đã hoàn thành. Cần định nghĩa hàm endGame()!");
+                }
+            }
+        }
+
+        function findAndRevealMissedCell() {
+            // 1. Tìm ô input chưa hoàn thành đầu tiên để xác định giá trị mục tiêu
+            const uncompletedInputCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]');
+
+            if (uncompletedInputCells.length === 0) {
+                checkAllCellsCompletedAndEndGame(); 
+                return { count: 0, value: null };
+            }
+
+            const cellToTarget = uncompletedInputCells[0];
+            const correctValue = cellToTarget.getAttribute('data-correct-value');
+            
+            // 2. Tìm TẤT CẢ các ô (Input & Non-Input) chưa hoàn thành có giá trị tương đồng
+            const selector = `.dp-cell[data-is-completed="false"][data-correct-value="${correctValue}"]`;
+            const cellsToReveal = document.querySelectorAll(selector);
+            let revealedCount = 0;
+            
+            console.log(`Tiết lộ: ${cellsToReveal.length} ô có giá trị ${correctValue}`);
+
+            // 3. Cập nhật UI cho từng ô đã chọn
+            cellsToReveal.forEach(cell => {
+                // *** KIỂM TRA LOẠI Ô ***
+                const isInputCell = cell.getAttribute('data-is-input') === 'true'; 
+                
+                const cellCorrectValue = cell.getAttribute('data-correct-value');
+                const cellContent = cell.querySelector('.cell-content');
+                
+                // Xóa input element (chỉ áp dụng cho các ô input)
+                const inputElement = cell.querySelector('.dp-input'); 
+                if (inputElement) {
+                    inputElement.remove(); 
+                }
+
+                if (cellContent) cellContent.innerHTML = '';
+                
+                // Tạo và chèn span chứa giá trị
+                const newSpan = document.createElement('span');
+                newSpan.className = 'dp-value font-semibold';
+
+                // *** ĐIỀU CHỈNH MÀU CHỮ THEO LOẠI Ô ***
+                if (isInputCell) {
+                    newSpan.classList.add('text-green-700');
+                } else {
+                    newSpan.classList.add('text-blue-700');
+                }
+
+                newSpan.textContent = cellCorrectValue;
+                cell.appendChild(newSpan);
+                
+                // Đánh dấu ô đã hoàn thành
+                cell.setAttribute('data-is-completed', 'true');
+                cell.classList.remove('bg-yellow-50'); 
+
+                // *** ĐIỀU CHỈNH MÀU NỀN THEO LOẠI Ô ***
+                if (isInputCell) {
+                    // Áp dụng lớp tiết lộ (nền xanh) chỉ cho ô input
+                    cell.classList.add('bg-green-50');
+                } else {
+                    // Ô non-input giữ nguyên màu nền (loại bỏ các lớp cũ để đảm bảo màu nền trắng/mặc định)
+                    cell.classList.add('bg-blue-50');
+                }
+
+                revealedCount++;
+            });
+            
+            // 4. Kiểm tra EndGame ngay sau khi tiết lộ
+            checkAllCellsCompletedAndEndGame();
+            
+            return { count: revealedCount, value: correctValue };
+        }
+
+        if (revealButton) {
+            revealButton.addEventListener('click', async () => {
+                const currentScore = parseInt(scoreElement.textContent) || 0;
+
+                // 1. Kiểm tra điểm
+                if (currentScore < REVEAL_COST) {
+                    alert(`⚠️ Không đủ điểm! Bạn cần ${REVEAL_COST} điểm để mở khóa, nhưng chỉ có ${currentScore} điểm.`);
+                    return;
+                }
+                
+                // 2. Kiểm tra ô còn lại
+                const uncompletedCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]');
+                if (uncompletedCells.length === 0) {
+                    alert("🎉 Tất cả các ô cần điền đã được hoàn thành hoặc tiết lộ. Không cần sử dụng tính năng này nữa.");
+                    return;
+                }
+
+                // 3. Khung xác nhận
+                const confirmed = confirm(`Bạn có chắc muốn chi ${REVEAL_COST} điểm để tiết lộ một ô DP?`);
+                if (!confirmed) {
+                    return;
+                }
+
+                // 4. Gọi API trừ điểm và tiết lộ ô
+                try {
+                    adjustScoreOnServer(-REVEAL_COST);
+                    findAndRevealMissedCell(); 
+                } catch (error) {
+                    console.error("Lỗi kết nối API tiết lộ ô:", error);
+                    alert("Lỗi kết nối khi trừ điểm/tiết lộ ô.");
                 }
             });
         }
@@ -540,7 +773,9 @@ V_i: Giá trị của Item i
         knapsack.addEventListener('dragleave', (e) => {
             knapsack.classList.remove('border-blue-500', 'bg-blue-50', 'border-dashed');
         });
-        knapsack.addEventListener('drop', (e) => {
+
+        // Hàm xử lý Drop riêng để có thể gỡ bỏ event listener khi hết giờ
+        function handleDropKnapsack(e) {
             e.preventDefault();
             if (!gameActive) return;
             knapsack.classList.remove('border-blue-500', 'bg-blue-50', 'border-dashed');
@@ -576,7 +811,9 @@ V_i: Giá trị của Item i
                 };
                 clone.appendChild(removeBtn);
             }
-        });
+        }
+
+        knapsack.addEventListener('drop', handleDropKnapsack); // Gắn event listener
 
         function removeFromKnapsack(knapsackItemElement, originalItemElement, itemData) {
             knapsackItemElement.remove();
@@ -598,41 +835,9 @@ V_i: Giá trị của Item i
                 knapsack.appendChild(placeholder);
             }
         }
-        
-        resetGameBtn.addEventListener('click', () => {
-            if (confirm("Bạn có chắc chắn muốn RESET trò chơi và xóa hết vật phẩm trong túi? (Thao tác này sẽ không xóa phiên chơi đã lưu trên server)")) {
-                
-                // --- Reset Knapsack ---
-                knapsack.querySelectorAll('.knapsack-item').forEach(item => item.remove());
-                
-                itemsContainer.querySelectorAll('.drag-item').forEach(item => {
-                    item.style.opacity = '1';
-                    item.style.cursor = 'grab';
-                    item.setAttribute('draggable', 'true');
-                });
-                
-                totalWeight = 0;
-                totalValue = 0;
-                updateTotals();
-
-                if (knapsack.children.length === 0) {
-                    removeFromKnapsack(null, null, { weight: 0, value: 0 }); 
-                }
-                
-                // --- Reset DP Table inputs (Nếu cần) ---
-                dpBoardBody.querySelectorAll('.dp-input').forEach(input => {
-                    input.value = '';
-                    input.classList.remove('border-red-500', 'ring-2', 'ring-red-500', 'animate-shake');
-                    input.style.backgroundColor = '#fffbeb';
-                });
-                remainingInputCells = interactiveCellsCount;
-                
-                alert("Knapsack và DP Inputs đã được Reset!");
-            }
-        });
 
 
-        // --- DP Table Logic ---
+        // --- DP Table Logic (Giữ nguyên logic tiết lộ từng bước) ---
         
         // 2. Logic Xử Lý Input trong Bảng DP
         dpBoardBody.querySelectorAll('.dp-input').forEach(input => {
@@ -652,9 +857,7 @@ V_i: Giá trị của Item i
                 if (isCompleted) return; 
 
                 if (enteredValue === correctValue) {
-                    // --- Giá trị ĐÚNG: Hoàn thành ô hiện tại và tiết lộ các ô trùng giá trị KHÔNG phải input ---
-
-                    // 1. Hoàn thành ô hiện tại (chuyển input thành span hiển thị)
+                    // --- Giá trị ĐÚNG ---
                     const correctSpan = document.createElement('span');
                     correctSpan.className = 'dp-value text-green-700 font-semibold';
                     correctSpan.textContent = correctValue;
@@ -664,17 +867,16 @@ V_i: Giá trị của Item i
                     cellElement.classList.add('bg-green-50'); 
                     cellElement.dataset.isCompleted = 'true'; 
                     remainingInputCells--; 
+                    adjustScoreOnServer(SCORE_CORRECT);
 
-                    // 2. Tiết lộ các ô *KHÔNG PHẢI INPUT* có cùng giá trị (hiển thị "đường đi" DP)
+                    // Tiết lộ các ô *KHÔNG PHẢI INPUT* có cùng giá trị
                     dpBoardBody.querySelectorAll('.dp-cell').forEach(otherCell => {
                         const otherCorrectValue = parseInt(otherCell.dataset.correctValue);
                         const isOtherInput = otherCell.dataset.isInput === 'true'; 
                         const isOtherCompleted = otherCell.dataset.isCompleted === 'true';
                         
-                        // Nếu giá trị đúng, KHÔNG phải ô input, và CHƯA hoàn thành (vẫn là mask)
                         if (otherCorrectValue === correctValue && !isOtherInput && !isOtherCompleted && otherCell.querySelector('.dp-hidden-mask')) {
                             
-                            // Chuyển mask thành span hiển thị giá trị
                             const revealedSpan = document.createElement('span');
                             revealedSpan.className = 'dp-value text-blue-700 font-semibold';
                             revealedSpan.textContent = otherCorrectValue;
@@ -686,28 +888,26 @@ V_i: Giá trị của Item i
                         }
                     });
 
-                    // 3. Kiểm tra hoàn thành trò chơi
+                    // Kiểm tra hoàn thành trò chơi
                     if (remainingInputCells <= 0) { 
                         setTimeout(endGame, 500);
                     }
 
                 } else {
-                    // --- Giá trị SAI: Hiển thị message thông báo và hiệu ứng lắc ---
+                    // --- Giá trị SAI ---
                     
                     inputElement.classList.add('border-red-500', 'ring-2', 'ring-red-500');
                     inputElement.style.backgroundColor = '#fef2f2';
                     
-                    // Thêm class animate-shake từ playgame.css (Giả định class này có sẵn)
                     inputElement.classList.add('animate-shake');
+                    adjustScoreOnServer(SCORE_INCORRECT);
                     
                     setTimeout(() => {
-                        // Loại bỏ class và reset input
                         inputElement.classList.remove('border-red-500', 'ring-2', 'ring-red-500', 'animate-shake');
                         inputElement.style.backgroundColor = '#fffbeb';
                         inputElement.value = '';
-                        // Thông báo lỗi
                         alert("❌ Giá trị nhập KHÔNG CHÍNH XÁC! Vui lòng kiểm tra lại Công Thức Truy Hồi.");
-                    }, 500); // Đặt thời gian timeout bằng với animation duration (0.5s)
+                    }, 500);
                 }
             });
         });
@@ -719,17 +919,16 @@ V_i: Giá trị của Item i
             // Dừng bộ đếm thời gian khi game kết thúc thành công
             if (timerInterval) clearInterval(timerInterval);
             
-            // 1. Tiết lộ toàn bộ bảng DP (bao gồm cả các ô input và mask còn sót)
+            // 1. Tiết lộ toàn bộ bảng DP
             dpBoardBody.querySelectorAll('.dp-cell').forEach(cell => {
                  const isBoundary = parseInt(cell.dataset.i) === 0 || parseInt(cell.dataset.w) === 0;
                  const isCompleted = cell.dataset.isCompleted === 'true';
                  
-                 // Chỉ hiển thị nốt các ô KHÔNG PHẢI BIÊN VÀ CHƯA HOÀN THÀNH
                  if (!isBoundary && !isCompleted) {
                      const correctValue = cell.dataset.correctValue;
                      
                      cell.innerHTML = '';
-                     cell.classList.add('bg-gray-200'); // Màu xám cho các ô được tiết lộ cuối cùng
+                     cell.classList.add('bg-gray-200'); 
                      
                      const finalSpan = document.createElement('span');
                      finalSpan.className = 'dp-value text-gray-800 font-bold';
@@ -749,25 +948,17 @@ V_i: Giá trị của Item i
             if (startScreen) {
                  startScreen.style.display = 'none';
             }
-            // LƯU Ý: Nếu trang được tải lại khi game đã bắt đầu, bạn cần phải TẢI LẠI DEADLINE từ server
-            // (Thường là từ Session hoặc một API /api/Game/Status/{takenId}) để tiếp tục startTimerWithDeadline
+            // LƯU Ý: Nếu game đã bắt đầu (Model.GameStarted=true), bạn cần phải TẢI LẠI TAKEN ID
+            // từ Session/LocalStorage hoặc một API /api/Game/LatestTaken/{userId} để tiếp tục startServerPollingTimer.
+            // Ví dụ: startServerPollingTimer(Model.SessionData.TakenId); 
+            // Nếu SessionData chưa được truyền qua Page Model, tính năng này sẽ không hoạt động khi F5.
         }
         
-        // Logic cho nút Toggle DP (Vô hiệu hóa tính năng này)
-        toggleDpBtn.addEventListener('click', () => {
-             alert("💡 Tính năng ẩn/hiện toàn bộ đã được thay thế bằng tính năng Tiết Lộ Từng Bước (nhập đúng sẽ tiết lộ các ô trùng giá trị) và Tiết Lộ Hoàn Toàn (khi kết thúc game)!");
-        });
-        
-        // Logic cho nút Hint/Guide
+        // Logic cho Hint/Recurrence Relation
         const hintButton = document.getElementById('hint-button');
         const hintContent = document.getElementById('hint-content');
         const hintIcon = document.getElementById('hint-icon');
-        const guideBtn = document.getElementById('guide-btn');
-        guideBtn.addEventListener('click', () => {
-            alert("Hướng dẫn: 1. Hoàn thành Bảng DP bằng cách điền giá trị tối ưu vào các ô bị đục lỗ. 2. Dùng Drag & Drop để chọn vật phẩm vào túi dựa trên kết quả DP.");
-        });
         
-        // Logic cho Hint/Recurrence Relation
         if (hintContent && hintButton) {
             hintContent.style.maxHeight = '0px';
             hintButton.addEventListener('click', () => {

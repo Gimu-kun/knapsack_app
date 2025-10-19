@@ -48,8 +48,8 @@ namespace knapsack_app.Controllers
                 }
 
                 // Lấy thời điểm Server bắt đầu phiên chơi (rất quan trọng)
-                var startTime = DateTime.UtcNow; 
-                
+                var startTime = DateTime.UtcNow;
+
                 // 2. Lưu phiên chơi vào bảng TAKEN
                 var takenId = await _gameService.CreateNewTakenSession(request, challengeInfo, startTime);
 
@@ -65,7 +65,7 @@ namespace knapsack_app.Controllers
                     StartTimeUtc = startTime,
                     DeadlineUtc = deadlineTime
                 };
-                
+
                 // Trả về JSON với format { takenId: "...", deadline: "2025-10-20T10:00:00.000Z", ...}
                 // Thêm trường success để Front-end dễ kiểm tra
                 return Ok(new { success = true, takenId = response.TakenId, deadline = response.DeadlineUtc });
@@ -74,6 +74,68 @@ namespace knapsack_app.Controllers
             {
                 // Log lỗi
                 return StatusCode(500, new { message = $"Lỗi hệ thống khi bắt đầu game: {ex.Message}" });
+            }
+        }
+
+        [HttpGet("Status/{takenId}")]
+        public async Task<IActionResult> GetGameStatus(string takenId)
+        {
+            if (string.IsNullOrEmpty(takenId))
+            {
+                return BadRequest(new { message = "Taken ID không được để trống." });
+            }
+
+            try
+            {
+                var status = await _gameService.GetGameStatus(takenId); // Gọi Service mới
+
+                if (status == null)
+                {
+                    return NotFound(new { message = $"Phiên chơi (Taken ID: {takenId}) không tồn tại." });
+                }
+
+                // Trả về TimeRemainingSeconds và trạng thái hết giờ
+                return Ok(new
+                {
+                    timeRemaining = status.TimeRemainingSeconds,
+                    isTimeUp = status.IsTimeUp
+                });
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi
+                return StatusCode(500, new { message = $"Lỗi hệ thống khi lấy trạng thái game: {ex.Message}" });
+            }
+        }
+        
+        [HttpPost("AdjustScore")]
+        public async Task<IActionResult> AdjustScore([FromBody] AdjustScoreRequest request)
+        {
+            // 1. Kiểm tra dữ liệu đầu vào cơ bản
+            if (string.IsNullOrEmpty(request.TakenId))
+            {
+                return BadRequest(new { message = "Taken ID không được để trống." });
+            }
+
+            try
+            {
+                // 2. Gọi Service để thực hiện logic điều chỉnh điểm
+                var response = await _gameService.AdjustTakenScore(request.TakenId, request.ScoreChange);
+
+                // 3. Xử lý phản hồi từ Service
+                if (!response.Success)
+                {
+                    // Trả về 404 nếu không tìm thấy TakenId
+                    return NotFound(new { message = response.Message });
+                }
+                
+                // 4. Trả về kết quả thành công (bao gồm NewScore và IsZeroScore)
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi và trả về lỗi Server
+                return StatusCode(500, new { message = $"Lỗi hệ thống khi điều chỉnh điểm: {ex.Message}" });
             }
         }
     }

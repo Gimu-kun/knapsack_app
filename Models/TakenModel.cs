@@ -19,10 +19,10 @@ public class TakenModel
     public string ChallengeId { get; set; } = string.Empty;
 
     [Column("team_name", TypeName = "varchar(100)")]
-    public string TeamName { get; set; }
+    public string? TeamName { get; set; }
 
     [Column("team_id", TypeName = "varchar(50)")]
-    public string TeamId { get; set; }
+    public string? TeamId { get; set; }
 
     [Column("player_count")]
     public int PlayerCount { get; set; }

@@ -163,3 +163,45 @@ header svg {
 .animate-shake {
     animation: shake 0.5s;
 }
+
+.score-feedback {
+    position: fixed;
+    font-size: 24px;
+    font-weight: 700;
+    opacity: 1;
+    transition: all 1.5s ease-out;
+    z-index: 1000;
+    pointer-events: none; /* Không chặn chuột */
+    transform: translateY(0);
+}
+
+.score-correct {
+    color: #10B981; /* Green-500 */
+    animation: fade-out-up-correct 1.5s forwards;
+}
+
+.score-incorrect {
+    color: #EF4444; /* Red-500 */
+    animation: fade-out-up-incorrect 1.5s forwards;
+}
+
+/* Hiệu ứng: Nổi lên và mờ dần */
+@keyframes fade-out-up-correct {
+    0% { transform: translate(0, 0); opacity: 1; text-shadow: 0 0 5px #10B981; }
+    100% { transform: translate(0, -50px); opacity: 0; }
+}
+@keyframes fade-out-up-incorrect {
+    0% { transform: translate(0, 0); opacity: 1; text-shadow: 0 0 5px #EF4444; }
+    100% { transform: translate(0, -50px); opacity: 0; }
+}
+
+/* CSS cho ô DP (Tùy chọn) */
+.correct-cell {
+    background-color: #D1FAE5 !important; /* Green-100 */
+    border: 2px solid #10B981 !important;
+}
+
+.incorrect-cell {
+    animation: shake 0.5s;
+    border: 2px solid #EF4444 !important; /* Red-500 */
+}

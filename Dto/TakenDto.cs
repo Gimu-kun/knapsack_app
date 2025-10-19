@@ -19,4 +19,24 @@ namespace knapsack_app.ViewModels
         public DateTime StartTimeUtc { get; set; } // Thời điểm phiên chơi bắt đầu (Server Time - Rất quan trọng!)
         public DateTime DeadlineUtc { get; set; } // Thời điểm hết hạn (StartTime + MaxDuration)
     }
+
+    public class GameStatus
+    {
+        public int TimeRemainingSeconds { get; set; }
+        public bool IsTimeUp { get; set; }
+    }
+
+    public class AdjustScoreRequest
+    {
+        public string TakenId { get; set; }
+        public int ScoreChange { get; set; }
+    }
+
+    public class AdjustScoreResponse
+    {
+        public bool Success { get; set; }
+        public int NewScore { get; set; }
+        public bool IsZeroScore { get; set; }
+        public string Message { get; set; }
+    }
 }
