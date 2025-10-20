@@ -101,7 +101,57 @@
 
                                 <tr class="@rowClass">
                                     <td class="text-center font-bold text-lg">@rankText</td>
-                                    <td class="text-left">
+                                    <td class="text-left py-3">
+                                <div class="flex items-center space-x-3">
+                                    @{
+                                        // Xác định URL Avatar chính
+                                        string mainAvatarUrl = entry.PlayerCount == 1 ? entry.Avatar : 
+                                        (entry.TeamMembers?.FirstOrDefault()?.Avatar ?? "");
+                                    }
+                                    @if (entry.PlayerCount == 1)
+                                    {
+                                    <div class="w-10 h-10 flex-shrink-0">
+                                        @if (!string.IsNullOrEmpty(mainAvatarUrl))
+                                                {
+                                                    <img class="w-full h-full rounded-full object-cover border-2 border-gray-200 shadow-sm"
+                                                        src="@mainAvatarUrl" 
+                                                        alt="@entry.Name Avatar" 
+                                                        onerror="this.onerror=null; this.src='/images/default_avatar.png';" 
+                                                    />
+                                                }
+                                                else
+                                                {
+                                                    // Fallback: Avatar chữ cái đầu tên
+                                                    <div class="w-full h-full rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg border-2 border-blue-400 shadow-md">
+                                                        @entry.Name.FirstOrDefault().ToString().ToUpper()
+                                                    </div>
+                                                }
+                                    </div>
+                                    }else{
+                                        // Chế độ MULTIPLAY (2, 3, 4 người chơi) - Hiển thị nhiều avatar
+                                                <div class="flex flex-shrink-0 -space-x-2 overflow-hidden">
+                                                    @foreach (var member in entry.TeamMembers.Take(4)) // Chỉ hiển thị tối đa 4 avatar
+                                                    {
+                                                        // Avatar 32x32px (w-8 h-8)
+                                                        <div class="w-8 h-8 rounded-full border-2 border-white bg-gray-200 shadow-sm relative">
+                                                            @if (!string.IsNullOrEmpty(member.Avatar))
+                                                            {
+                                                                <img class="w-full h-full rounded-full object-cover"
+                                                                    src="@member.Avatar" 
+                                                                    alt="@member.Username Avatar" 
+                                                                    onerror="this.onerror=null; this.src='/images/default_avatar.png';" 
+                                                                />
+                                                            }else{
+                                                                // Fallback: Avatar chữ cái
+                                                                <div class="w-full h-full rounded-full bg-indigo-400 text-white flex items-center justify-center font-bold text-xs">
+                                                                    @member.Username.FirstOrDefault().ToString().ToUpper()
+                                                                </div>
+                                                            }
+                                                        </div>
+                                                    }
+                                                </div>
+                                    }
+                                    <div>
                                         @if (entry.PlayerCount == 1)
                                         {
                                             // Chế độ SOLO
@@ -112,16 +162,18 @@
                                         {
                                             // Chế độ MULTIPLAY
                                             <div class="font-bold text-gray-900 mb-1">@entry.Name</div>
-                                            <div class="text-xs text-gray-600 space-x-2">
+                                            <div class="text-xs text-gray-600 space-x-1 mt-1">
                                                 @foreach (var member in entry.TeamMembers)
                                                 {
-                                                    <span class="inline-block bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full font-medium ring-1 ring-blue-300/50 hover:bg-blue-100 hover:ring-blue-400 transition hover:scale-[1.02]">
+                                                    <span class="inline-block bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded-full font-medium ring-1 ring-blue-300/50 hover:bg-blue-100 transition">
                                                         @member.Username
                                                     </span>
                                                 }
                                             </div>
                                         }
-                                    </td>
+                                    </div>
+                                </div>
+                            </td>
                                     <td class="text-center text-green-600 font-bold">@entry.Score</td>
                                     <td class="text-center text-red-600 font-bold">@entry.Duration</td> 
                                     <td class="text-center text-gray-500">@entry.LastPlayedAt</td>

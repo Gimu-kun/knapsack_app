@@ -426,11 +426,9 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     showScoreFeedback(scoreChange);
                 } else {
                     console.error("Lỗi điều chỉnh điểm từ Server:", data.message || "Lỗi không xác định");
-                    alert(`Lỗi Server: ${data.message || 'Không thể điều chỉnh điểm.'}`);
                 }
             } catch (error) {
                 console.error("Lỗi kết nối API điều chỉnh điểm:", error);
-                alert("Lỗi kết nối khi điều chỉnh điểm. Vui lòng kiểm tra mạng.");
             }
         }
 
@@ -597,14 +595,12 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 } else {
                     // Hiển thị lỗi từ Server
                     const errorMessage = result.message || `Lỗi không xác định: ${response.status} - ${JSON.stringify(result)}`;
-                    alert(`Lỗi khi bắt đầu game: ${errorMessage}`);
                     startGameBtn.disabled = false;
                     startGameBtn.textContent = '🔥 BẮT ĐẦU TRÒ CHƠI';
                     countdownModal.classList.add('hidden'); // Ẩn countdown nếu có lỗi
                 }
 
             } catch (error) {
-                alert(`Lỗi mạng hoặc hệ thống: ${error.message}`);
                 startGameBtn.disabled = false;
                 startGameBtn.textContent = '🔥 BẮT ĐẦU TRÒ CHƠI';
                 countdownModal.classList.add('hidden'); // Ẩn countdown nếu có lỗi
@@ -662,11 +658,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 // Tất cả các ô đã hoàn thành (qua nhập tay hoặc tiết lộ)
                 console.log("Tất cả ô input DP đã được hoàn thành. Tiến hành kết thúc game DP.");
                 // 2. GỌI HÀM KẾT THÚC GAME DP
-                if (typeof endGame === 'function') {
-                    endGame(true, 'DPBoardCompleted');
-                } else {
-                    alert("Game Over: Bảng DP đã hoàn thành. Cần định nghĩa hàm endGame()!");
-                }
+                endGame(true, 'DPBoardCompleted');
             }
         }
 
@@ -770,7 +762,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     findAndRevealMissedCell(); 
                 } catch (error) {
                     console.error("Lỗi kết nối API tiết lộ ô:", error);
-                    alert("Lỗi kết nối khi trừ điểm/tiết lộ ô.");
                 }
             });
         }
@@ -935,7 +926,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             
             console.log(`Kết quả Knapsack: W=${finalWeight}, V=${finalValue}`);
             
-            // Vô hiệu hóa Drag/Drop hoàn toàn
             knapsack.removeEventListener('drop', handleDropKnapsack); 
             
             if (isOptimal) {
@@ -949,8 +939,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         
         // 4. Logic Hoàn Thành Trò Chơi DP (EndGame Mới)
         function endGame(isSuccess = false, reason = 'TimeUp') { 
-            // Dừng bộ đếm thời gian khi game kết thúc thành công
-            if (timerInterval) clearInterval(timerInterval);
             
             // 1. Tiết lộ toàn bộ bảng DP (bao gồm cả ô mask)
             dpBoardBody.querySelectorAll('.dp-cell').forEach(cell => {
@@ -977,8 +965,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             if (isSuccess && reason === 'DPBoardCompleted') {
                 // Hiển thị 2 khu vực Knapsack/Items
                 knapsackSection.classList.remove('hidden'); 
-                itemsSection.classList.remove('hidden');     
-                alert("🎉 CHÚC MỪNG! Bạn đã hoàn thành Bảng Quy Hoạch Động! Giờ hãy chọn vật phẩm cho túi. Game sẽ tự động kết thúc khi bạn đạt giá trị Tối Ưu.");
+                itemsSection.classList.remove('hidden');
             } else if (reason === 'TimeUp') {
                 // Đã xử lý trong challengeFailedByTime.
             }
@@ -1052,7 +1039,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                         inputElement.classList.remove('border-red-500', 'ring-2', 'ring-red-500', 'animate-shake');
                         inputElement.style.backgroundColor = '#fffbeb';
                         inputElement.value = '';
-                        alert("❌ Giá trị nhập KHÔNG CHÍNH XÁC! Vui lòng kiểm tra lại Công Thức Truy Hồi.");
                     }, 500);
                 }
             });
@@ -1089,7 +1075,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             console.log("currentTakenId",currentTakenId)
             if (!currentTakenId) {
                 console.error("Lỗi: Không tìm thấy Taken ID để hiển thị kết quả cuối cùng.");
-                alert("Trò chơi kết thúc! Lỗi: Không tìm thấy ID phiên chơi.");
                 return;
             }
 
@@ -1123,7 +1108,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
 
             } catch (error) {
                 console.error("Lỗi khi lấy kết quả cuối cùng:", error);
-                alert(`Trò chơi kết thúc! Lỗi khi lấy kết quả cuối cùng từ server. Vui lòng kiểm tra console.`);
             }
         }
 

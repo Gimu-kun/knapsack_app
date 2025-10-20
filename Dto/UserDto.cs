@@ -1,3 +1,5 @@
+using knapsack_app.Models;
+
 public class UserCreationReqDto
 {
     public string Account { get; set; }
@@ -26,4 +28,11 @@ public class LoginReqDto
 {
     public string Account { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+}
+
+public class UserDto
+{
+    public string Id { get; set; }
+    public string Account { get; set; }
+    public string Avatar { get; set; }
 }

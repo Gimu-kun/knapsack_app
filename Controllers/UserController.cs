@@ -14,11 +14,6 @@ namespace knapsack_app.Controllers
             _userService = userService;
         }
 
-        /// <summary>
-        /// API Đăng nhập người dùng.
-        /// </summary>
-        /// <param name="request">Chứa Account và Password.</param>
-        /// <returns>Token JWT nếu thành công hoặc thông báo lỗi.</returns>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginReqDto request)
         {

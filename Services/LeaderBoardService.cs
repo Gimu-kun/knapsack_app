@@ -34,7 +34,7 @@ public class LeaderBoardService
             {
                 RankKey = g.Key,
                 PlayerCount = playerCount,
-
+                Avatar = _context.User.Where(u => u.Id == g.Key).Select(u => u.Avatar).FirstOrDefault(),
                 Name = playerCount == 1
                     ? _context.User
                         .Where(u => u.Id == g.Key)
@@ -53,6 +53,10 @@ public class LeaderBoardService
                         .Select(userId => new TeamMemberDto
                         {
                             UserId = userId,
+                            Avatar = _context.User
+                                .Where(u => u.Id == userId)
+                                .Select(u => u.Avatar)
+                                .FirstOrDefault(),
                             Username = _context.User
                                 .Where(u => u.Id == userId)
                                 .Select(u => u.Account)

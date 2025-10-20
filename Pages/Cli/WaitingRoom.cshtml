@@ -1,84 +1,272 @@
-@page
-@model knapsack_app.Pages.Cli.LoginModel
+@page "/room"
+@model knapsack_app.Pages.Cli.WaitingRoomModel
 @{
     Layout = "_Cli_Layout";
 }
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=person_add" />
 
-<section class="py-16 bg-white">
+<section class="py-12 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div class="text-center mb-12">
-            <h1 class="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl">
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-extrabold tracking-tight text-indigo-700">
                 Phòng Chờ
             </h1>
             <p class="mt-4 text-xl text-gray-600">Mã Phòng của bạn:</p>
-            <div class="inline-block p-3 mt-2 bg-blue-50 border-2 border-blue-200 rounded-xl">
-                <span class="text-3xl font-mono text-blue-800 tracking-wider font-bold select-all">
-                    #KNAP0482
+            <div class="flex items-center inline-block p-4 mt-2 bg-white border-4 border-indigo-400 rounded-xl shadow-lg transform hover:scale-[1.01] transition duration-200 cursor-pointer">
+                <span id="room-id-display" class="text-4xl font-mono text-indigo-900 tracking-wider font-extrabold select-all" onclick="navigator.clipboard.writeText('@Model.Id'); alert('Đã sao chép mã phòng!')">
+                    @Model.Id 
                 </span>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-
-            <div class="p-5 border-2 border-blue-500 rounded-xl bg-white shadow-xl flex flex-col items-center space-y-4 relative min-h-[180px]">
-                <span class="absolute top-0 right-0 mt-2 mr-2 text-xs font-bold uppercase text-white bg-blue-600 px-2 py-1 rounded-full">
-                    Chủ Phòng
-                </span>
-                
-                <div class="w-16 h-16 bg-blue-200 rounded-full border-4 border-blue-600 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                
-                <p class="font-bold text-lg text-gray-900 truncate w-full text-center">
-                    Tên Người Chơi 1
-                </p>
-                <p class="text-sm text-gray-600">
-                    Điểm tích luỹ: <span class="font-extrabold text-green-600">12,450</span>
-                </p>
-            </div>
-
-            <div class="p-5 border-2 border-gray-300 rounded-xl bg-white shadow-md flex flex-col items-center space-y-4 relative min-h-[180px]">
-                <div class="w-16 h-16 bg-gray-200 rounded-full border-4 border-gray-400 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                
-                <p class="font-bold text-lg text-gray-900 truncate w-full text-center">
-                    Người Chơi 2
-                </p>
-                <p class="text-sm text-gray-600">
-                    Điểm tích luỹ: <span class="font-extrabold text-green-600">8,100</span>
-                </p>
-            </div>
-
-            <div class="p-5 border-2 border-gray-300 rounded-xl bg-white shadow-md flex flex-col items-center space-y-4 relative min-h-[180px]">
-                <div class="w-16 h-16 bg-gray-200 rounded-full border-4 border-gray-400 flex items-center justify-center">
-                    <svg class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                
-                <p class="font-bold text-lg text-gray-900 truncate w-full text-center">
-                    Người Chơi 3
-                </p>
-                <p class="text-sm text-gray-600">
-                    Điểm tích luỹ: <span class="font-extrabold text-green-600">1,900</span>
-                </p>
+        <div class="max-w-xl mx-auto mb-10 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    👑 Cài đặt trò chơi
+                </h2>
+                <span id="difficulty-display" class="text-xl font-extrabold text-green-600">DỄ</span> 
             </div>
             
-            <div class="p-5 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex flex-col items-center justify-center space-y-2 min-h-[180px]">
-                <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
-                <p class="font-semibold text-gray-500 text-base">Đang chờ người chơi...</p>
+            <div id="host-difficulty-control" class="mt-4 hidden">
+                <label for="difficulty-select" class="block text-sm font-medium text-gray-700 mb-2">Chọn Độ Khó:</label>
+                <select id="difficulty-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg rounded-md">
+                    <option value="easy">Dễ</option>
+                    <option value="medium">Trung bình</option>
+                    <option value="hard">Khó</option>
+                </select>
             </div>
-
+            
+            <div id="member-difficulty-message" class="mt-4 text-center p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                <p class="text-indigo-700 font-medium">Đang chờ Chủ phòng thiết lập độ khó...</p>
+            </div>
         </div>
 
-        <div class="mt-12 flex justify-center">
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="player-list-container">
+        </div>
+
+        <div class="mt-12 flex justify-center flex-col items-center">
             <a href="#"
-                class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-xl font-bold rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 transition duration-300 shadow-xl uppercase tracking-wider disabled:bg-indigo-400"
+                id="btn-start-game"
+                class="inline-flex items-center justify-center px-10 py-4 border border-transparent text-xl font-bold rounded-lg text-white bg-green-600 hover:bg-green-700 transition duration-300 shadow-xl uppercase tracking-wider hidden disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                 <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 Bắt đầu trò chơi
             </a>
+            
+            <p id="waiting-for-host-message" class="text-xl font-semibold text-gray-700 p-4 border rounded-lg bg-yellow-50 mt-4">
+                Đang chờ Chủ phòng bắt đầu...
+            </p>
         </div>
 
     </div>
 </section>
+
+@section Scripts {
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script> 
+<script>
+    const currentUserId = "@Model.CurrentUser?.Id";
+    const currentUsername = "@Model.CurrentUser?.Account";
+    const currentAvatar = "@Model.CurrentUser?.Avatar";
+
+    // ✅ THÊM BIẾN LƯU TRỮ ĐỘ KHÓ HIỆN TẠI
+    let currentDifficulty = 'easy';
+
+    // Hàm chuyển đổi giá trị độ khó sang chuỗi hiển thị
+    function getDifficultyText(value) {
+        switch (value) {
+            case 'easy': return 'DỄ';
+            case 'medium': return 'TRUNG BÌNH';
+            case 'hard': return 'KHÓ';
+            default: return 'Không xác định';
+        }
+    }
+    
+    // Hàm cập nhật màu cho hiển thị độ khó
+    function getDifficultyColorClass(value) {
+        switch (value) {
+            case 'easy': return 'text-green-600';
+            case 'medium': return 'text-yellow-600';
+            case 'hard': return 'text-red-600';
+            default: return 'text-gray-600';
+        }
+    }
+
+
+    $(document).ready(function () {
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomId = urlParams.get('id');
+        
+        if (!currentUserId || !currentUsername) {
+            window.location.href = '/login';
+            return;
+        }
+
+        if (!roomId) {
+            alert("Lỗi: Không tìm thấy ID phòng.");
+            window.location.href = '/selection';
+            return;
+        }
+
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl("/roomHub")
+            .withAutomaticReconnect()
+            .build();
+
+        let isHost = false;
+        
+        // --- Xử lý sự kiện từ Server ---
+
+        // 2. Lắng nghe cập nhật danh sách người chơi
+        connection.on("PlayersUpdated", function (players) {
+            console.log("Danh sách người chơi cập nhật:", players);
+            updatePlayerList(players);
+        });
+        
+        // ✅ THÊM: 3. Lắng nghe cập nhật Độ khó
+        connection.on("DifficultyUpdated", function (difficulty) {
+            currentDifficulty = difficulty;
+            const diffText = getDifficultyText(difficulty);
+            const diffColor = getDifficultyColorClass(difficulty);
+            
+            // Cập nhật hiển thị độ khó cho tất cả người chơi
+            $('#difficulty-display').text(diffText).removeClass('text-green-600 text-yellow-600 text-red-600').addClass(diffColor);
+            
+            // Cập nhật thông báo chờ cho Member
+            if (!isHost) {
+                $('#member-difficulty-message p').text(`Độ khó đã được đặt là: ${diffText}`);
+            }
+        });
+
+
+        // 4. Lắng nghe thông báo về Vai trò (Host/Member)
+        connection.on("RoleAssigned", function (isHostRole) {
+            isHost = isHostRole;
+            
+            // Cập nhật hiển thị nút Bắt đầu và control độ khó
+            if (isHost) {
+                $('#btn-start-game').removeClass('hidden');
+                $('#waiting-for-host-message').addClass('hidden');
+                
+                // HOST CONTROL
+                $('#host-difficulty-control').removeClass('hidden');
+                $('#member-difficulty-message').addClass('hidden');
+                
+                // Đồng bộ hóa select với độ khó hiện tại (nếu Host mới tham gia)
+                $('#difficulty-select').val(currentDifficulty);
+            } else {
+                $('#btn-start-game').addClass('hidden');
+                $('#waiting-for-host-message').removeClass('hidden');
+                
+                // MEMBER VIEW
+                $('#host-difficulty-control').addClass('hidden');
+                $('#member-difficulty-message').removeClass('hidden');
+            }
+        });
+
+        // 5. Lắng nghe lệnh Bắt đầu Trò chơi
+        connection.on("GameStarted", function (roomId, difficulty) {
+            alert(`Trò chơi bắt đầu với độ khó: ${getDifficultyText(difficulty)}`);
+            window.location.href = `/play?room=${roomId}&difficulty=${difficulty}`;
+        });
+        
+        // --- Hàm giao diện ---
+
+        function updatePlayerList(players) {
+            const container = $('#player-list-container'); 
+            container.empty();
+            
+            players.forEach(player => {
+                const isMe = player.userId === currentUserId;
+                const hostClass = player.isHost ? "border-indigo-500 shadow-xl" : "border-gray-300 shadow-md";
+                const bgClass = player.isHost ? "bg-indigo-100 border-indigo-400" : "bg-gray-200 border-gray-400";
+                
+                const hostLabel = player.isHost 
+                    ? `<span class="absolute top-0 right-0 mt-2 mr-2 text-xs font-bold uppercase text-white bg-indigo-600 px-2 py-1 rounded-full">Chủ Phòng</span>`
+                    : '';
+
+                let avatarContent;
+                if (player.avatar && player.avatar.trim() !== "") {
+                    // Nếu có Avatar, hiển thị ảnh
+                    avatarContent = `<img src="${player.avatar}" alt="${player.username}" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'material-symbols-outlined text-gray-500 text-3xl\\'>person</span>';" />`;
+                } else {
+                    // Nếu không có Avatar, hiển thị chữ cái đầu
+                    avatarContent = `
+                        <div class="h-full w-full rounded-full flex items-center justify-center text-gray-700 font-extrabold text-2xl">
+                             ${player.username.substring(0, 1).toUpperCase()}
+                        </div>
+                    `;
+                }
+
+                const playerHtml = `
+                    <div class="p-5 border-2 ${hostClass} rounded-xl bg-white flex flex-col items-center space-y-3 relative min-h-[180px] hover:shadow-2xl transition duration-200">
+                        ${hostLabel}
+                        <div class="w-16 h-16 ${bgClass} rounded-full border-4 flex items-center justify-center overflow-hidden">
+                            ${avatarContent}
+                        </div>
+                        <p class="font-bold text-lg text-gray-900 truncate w-full text-center">
+                            ${player.username} ${isMe ? ' <span class="text-sm font-normal text-indigo-500">(Bạn)</span>' : ''}
+                        </p>
+                        <p class="text-sm text-gray-600">
+                            Điểm tích luỹ: <span class="font-extrabold text-green-600">${player.score.toLocaleString('vi-VN')}</span>
+                        </p>
+                    </div>`;
+                container.append(playerHtml);
+            });
+            
+            // Thêm các ô trống nếu chưa đủ 4 người
+            for (let i = players.length; i < 4; i++) {
+                 const emptySlotHtml = `
+                    <div class="p-5 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex flex-col items-center justify-center space-y-2 min-h-[180px]">
+                        <span class="material-symbols-outlined text-gray-400 text-4xl">
+                            person_add
+                        </span>
+                        <p class="font-semibold text-gray-500 text-base">Đang chờ người chơi...</p>
+                    </div>`;
+                container.append(emptySlotHtml);
+            }
+        }
+
+        // --- Khởi tạo và Bắt đầu ---
+        connection.start().then(function () {
+            connection.invoke("JoinRoom", roomId, currentUserId, currentUsername, currentAvatar).catch(function (err) {
+                return console.error(err.toString());
+            });
+        }).catch(function (err) {
+            return console.error("SignalR Connection Error: " + err.toString());
+        });
+        
+        // --- Xử lý sự kiện Độ khó ---
+        $('#difficulty-select').on('change', function() {
+            const newDifficulty = $(this).val();
+            if (isHost) {
+                // Gửi lệnh cập nhật độ khó lên Hub
+                connection.invoke("SetDifficulty", roomId, newDifficulty).catch(function (err) {
+                    return console.error("Error setting difficulty: " + err.toString());
+                });
+            }
+        });
+
+
+        // --- Xử lý nút bấm ---
+
+        $('#btn-start-game').on('click', function(e) {
+            e.preventDefault();
+            if (isHost) {
+                // Lấy độ khó đã chọn cuối cùng
+                const selectedDifficulty = $('#difficulty-select').val();
+                
+                // Gửi lệnh StartGame lên Hub, kèm theo độ khó
+                connection.invoke("StartGame", roomId, selectedDifficulty).catch(function (err) {
+                    return console.error("Error starting game: " + err.toString());
+                });
+            } else {
+                alert("Bạn không phải Chủ phòng để bắt đầu trò chơi.");
+            }
+        });
+
+    });
+</script>
+}

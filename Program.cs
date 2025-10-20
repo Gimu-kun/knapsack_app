@@ -42,6 +42,7 @@ builder.Services.AddCors(options =>
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
 
 builder.Services.AddHttpClient();
 
@@ -132,7 +133,7 @@ builder.Services
 
 
 var app = builder.Build();
-
+app.MapHub<GameHub>("/roomHub");
 
 // =========================================================
 // 2. CẤU HÌNH HTTP REQUEST PIPELINE

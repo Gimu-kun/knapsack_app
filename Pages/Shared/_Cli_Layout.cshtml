@@ -13,7 +13,7 @@
 </head>
 
 <body class="bg-white text-gray-800">
-    <partial name="_Cli_Header" />
+    @await Component.InvokeAsync("Header")
     <div class="flex pt-16">
         <main id="main-content" class="flex-grow w-full p-4 md:p-8">
             @RenderBody()

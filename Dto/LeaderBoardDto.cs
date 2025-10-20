@@ -7,6 +7,8 @@ namespace knapsack_app.ViewModels
 
         public string Name { get; set; } = "Người chơi/Đội ẩn danh";
 
+        public string? Avatar { get; set; }
+
         public int Score { get; set; }
 
         public int Duration { get; set; } 
@@ -24,5 +26,7 @@ namespace knapsack_app.ViewModels
     {
         public string UserId { get; set; } = string.Empty;
         public string Username { get; set; } = string.Empty;
+
+        public string? Avatar { get; set; }
     }
 }

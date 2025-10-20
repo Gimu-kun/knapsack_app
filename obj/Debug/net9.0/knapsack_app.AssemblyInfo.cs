@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("knapsack_app")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b6f378fa9e42f8f840376877e61e1fc555c192b1")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f00fd7f1d8679302d853f65562483e7e04d98e25")]
 [assembly: System.Reflection.AssemblyProductAttribute("knapsack_app")]
 [assembly: System.Reflection.AssemblyTitleAttribute("knapsack_app")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

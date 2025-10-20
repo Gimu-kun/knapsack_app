@@ -58,7 +58,7 @@ namespace knapsack_app.Pages.Cli
                 {
                     HttpContext.Response.Cookies.Append("UserToken", authResult.Token, new CookieOptions
                     {
-                        HttpOnly = true,
+                        HttpOnly = false,
                         Secure = true,
                         SameSite = SameSiteMode.Strict,
                         Expires = DateTimeOffset.UtcNow.AddHours(6)
