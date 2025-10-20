@@ -9,6 +9,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="~/css/playgame.css">
 
 @{
@@ -21,6 +22,9 @@
     var missedCells = Model.MissArray.Select(c => (c.X, c.Y)).ToHashSet();
     var interactiveCellsCount = missedCells.Count;
     var maxDurationDisplay = gameData.MaxDuration;
+    // LẤY GIÁ TRỊ TỐI ƯU TỪ Ô CUỐI CÙNG DP[i-1][w]
+    var optimalValue = Model.DPBoard[items.Count, capacity]; 
+    
     Func<int, string> formatTime = (totalSeconds) => {
         var minutes = totalSeconds / 60;
         var seconds = totalSeconds % 60;
@@ -49,6 +53,10 @@
         </div>
     </div>
 }
+
+<div id="countdown-modal" class="fixed inset-0 bg-gray-900 bg-opacity-90 flex items-center justify-center z-[100] hidden">
+    <span id="countdown-display" class="text-9xl font-extrabold text-white animate-pulse">3</span>
+</div>
 
 <body class="bg-gray-100 text-gray-800 pt-16 font-[Inter]">
 
@@ -88,8 +96,10 @@
                 <div class="p-3 bg-yellow-50 rounded-lg text-yellow-800">
                     <span class="block text-xs font-normal text-gray-500">Độ khó</span>
                     <span class="text-2xl font-bold">@(
-                        gameData.Difficulty == 1 ? "Dễ" : 
-                        gameData.Difficulty == 2 ? "Trung Bình" : 
+                        gameData.Difficulty == 1 ?
+                        "Dễ" : 
+                        gameData.Difficulty == 2 ?
+                        "Trung Bình" : 
                         "Khó"
                     )</span>
                 </div>
@@ -121,7 +131,8 @@
                                         var item = items[i];
                                         <th scope="col"
                                             class="px-4 py-2 font-bold text-gray-900 border-l border-gray-300 w-24 min-w-24">
-                                            Vp. @(i + 1) (@item.Name)
+                                            Vp.
+                                            @(i + 1) (@item.Name)
                                         </th>
                                     }
                                 </tr>
@@ -180,11 +191,11 @@ w: Sức chứa hiện tại của túi (Capacity w)
 W_i: Trọng lượng của Item i
 V_i: Giá trị của Item i
 
-    Nếu W_i > w (Vật phẩm quá nặng):
+Nếu W_i > w (Vật phẩm quá nặng):
     DP[i][w] = DP[i-1][w]
     (Không thể chọn Item i, giữ nguyên giá trị tối ưu của i-1)
 
-    Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
+Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
     DP[i][w] = max(
     DP[i-1][w],                         // TH1: Không chọn Item i
     V_i + DP[i-1][w - W_i]              // TH2: Chọn Item i
@@ -231,10 +242,9 @@ V_i: Giá trị của Item i
                                             var cellValue = Model.DPBoard[i, w];
                                             var cellId = $"dp-cell-{i}-{w}";
                                             
-                                            var isBoundary = i == 0 || w == 0; 
+                                            var isBoundary = i == 0 || w == 0;
                                             // KIỂM TRA: Ô này có nằm trong danh sách các lỗ bị đục không?
-                                            var isMissedCell = missedCells.Contains((i, w)); 
-
+                                            var isMissedCell = missedCells.Contains((i, w));
                                             <td id="@cellId" 
                                                 class="dp-cell text-center border border-gray-300 p-0"
                                                 data-i="@i"
@@ -276,10 +286,12 @@ V_i: Giá trị của Item i
                         </table>
                     </div>
                 </div>
-
-                <div class="bg-white p-6 rounded-xl shadow-lg">
-                    <h3 class="text-2xl font-bold mb-4 text-gray-900">3. Knapsack (Túi)</h3>
-                    <p class="text-sm text-gray-600 mb-4">Kéo vật phẩm vào đây. Tổng trọng lượng không quá
+                
+                <div id="knapsack-section" class="bg-white p-6 rounded-xl shadow-lg hidden">
+                    <h3 class="text-2xl font-bold mb-4 text-gray-900">3.
+                        Knapsack (Túi)</h3>
+                    <p class="text-sm text-gray-600 mb-4">Kéo vật phẩm vào đây.
+                        Tổng trọng lượng không quá
                         @capacity kg.</p>
 
                     <div id="knapsack-dropzone" class="knapsack-dropzone border-2 border-dashed border-gray-400 p-4 rounded-xl flex flex-wrap gap-2 min-h-[100px] items-center justify-start transition duration-300">
@@ -297,14 +309,16 @@ V_i: Giá trị của Item i
                     <div class="mt-4 p-3 bg-gray-50 rounded-lg border">
                         <p class="text-lg font-bold">Tổng Giá Trị: <span id="total-value"
                                 class="text-green-600">0</span></p>
-                        <p class="text-lg font-bold">Tổng Trọng Lượng: <span id="total-weight"
+                        <p class="text-lg font-bold">Tổng 
+                            Trọng Lượng: <span id="total-weight"
                                 class="text-red-600">0</span> / @capacity kg</p>
                     </div>
-                </div>
+
+                    </div>
             </div>
 
             <div class="lg:col-span-1">
-                <div class="sticky top-20 space-y-4">
+                <div id="items-section" class="sticky top-20 space-y-4 hidden"> 
                     <div class="bg-white p-4 rounded-xl shadow-lg">
                         <h3 class="text-xl font-bold text-gray-900 mb-2">4.
                             Vật Phẩm Để Chọn</h3>
@@ -314,7 +328,7 @@ V_i: Giá trị của Item i
                             @foreach (var item in items)
                             {
                                 <div class="drag-item bg-white p-3 rounded-lg shadow border border-gray-200 hover:ring-2 hover:ring-blue-300 transition duration-150 cursor-grab" draggable="true" data-id="@item.Id" data-value="@item.Value"
-                                    data-weight="@item.Weight">
+                                    data-weight="@item.Weight" data-name="@item.Name">
                                     <p class="text-sm font-bold text-gray-900">@item.Name</p>
                                     <div class="flex justify-between text-xs mt-1">
                                         <p class="text-green-600">V: <strong>@item.Value</strong></p>
@@ -329,17 +343,31 @@ V_i: Giá trị của Item i
         </div>
         </div>
     </main>
+    <div id="final-results-modal" class="fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center z-50 p-4 hidden">
+        <div class="bg-white p-10 rounded-xl shadow-2xl text-center max-w-lg w-full">
+            <h2 class="text-4xl font-extrabold text-green-600 mb-4">🎉 HOÀN THÀNH THỬ THÁCH! 🎉</h2>
+            <p class="text-lg text-gray-700 mb-6">Bạn đã tìm được tổ hợp vật phẩm đạt giá trị Tối Ưu: <span id="optimal-value-display" class="font-bold text-blue-600"></span></p>
 
+            <div class="space-y-3 p-4 bg-gray-50 rounded-lg mb-8">
+                <p class="text-xl font-bold text-gray-800">Tổng điểm đạt được: <span id="final-score-display" class="text-3xl text-indigo-700">0</span></p>
+                <p class="text-xl font-bold text-gray-800">Thời gian đã sử dụng: <span id="time-used-display" class="text-3xl text-red-700">00:00</span></p>
+            </div>
+            
+            <a id="ranking-btn" href="/rank?players=1&difficulty=1" class="px-8 py-3 bg-blue-500 text-white text-xl font-bold rounded-xl shadow-lg hover:bg-blue-600 transition duration-300 transform hover:scale-105 inline-block">
+                🏆 XEM BẢNG XẾP HẠNG
+            </a>
+        </div>
+    </div>
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script>
         const API_BASE_URL = '/api/Game/AdjustScore';
         let takenId = null;
         const knapsack = document.getElementById('knapsack-dropzone');
         const itemsContainer = document.getElementById('drag-items-container');
         const maxCapacity = @gameData.MaxCapacity;
-        
         // Trạng thái game (ban đầu lấy từ Model)
-        let gameActive = @(Model.GameStarted.ToString().ToLower()); 
-        
+        let gameActive = @(Model.GameStarted.ToString().ToLower());
         const interactiveCellsCount = @interactiveCellsCount; 
         let remainingInputCells = interactiveCellsCount;
         
@@ -347,8 +375,18 @@ V_i: Giá trị của Item i
         const startScreen = document.getElementById('start-screen');
         const startGameBtn = document.getElementById('start-game-btn');
         const revealButton = document.getElementById('reveal-cell-button');
-        const resetGameBtn = document.getElementById('reset-game-btn');
-        const challengeId = '@challengeId'; // Lấy Challenge ID từ Razor
+        const challengeId = '@challengeId';
+        
+        // --- KHAI BÁO CÁC BIẾN MỚI ---
+        const knapsackSection = document.getElementById('knapsack-section');
+        const itemsSection = document.getElementById('items-section');
+        const OPTIMAL_VALUE = @optimalValue; // GIÁ TRỊ TỐI ƯU ĐƯỢC LẤY TỪ RAZOR
+        const MAX_DURATION_SECONDS = @maxDurationDisplay;
+        const finalResultsModal = document.getElementById('final-results-modal');
+        const finalScoreDisplay = document.getElementById('final-score-display');
+        const timeUsedDisplay = document.getElementById('time-used-display');
+        const optimalValueDisplay = document.getElementById('optimal-value-display');
+        // --- KẾT THÚC KHAI BÁO CÁC BIẾN MỚI ---
 
         // Điểm thưởng/phạt
         const SCORE_CORRECT = 500;
@@ -356,7 +394,6 @@ V_i: Giá trị của Item i
         const REVEAL_COST = 1000;
         
         const scoreElement = document.getElementById('current-score');
-
         async function adjustScoreOnServer(scoreChange) {
             if (!takenId) {
                 console.error("Lỗi: Không tìm thấy Taken ID.");
@@ -374,12 +411,10 @@ V_i: Giá trị của Item i
                         scoreChange: scoreChange
                     })
                 });
-
                 const data = await response.json();
                 console.log(data);
                 if (response.ok && data.success) {
                     console.log(`Điểm đã được điều chỉnh. Điểm mới: ${data.newScore}`);
-                    
                     // Cập nhật điểm trên UI
                     if (scoreElement) {
                         scoreElement.textContent = data.newScore;
@@ -401,8 +436,7 @@ V_i: Giá trị của Item i
             // Đây là ví dụ về hiệu ứng nổi (floating effect)
             const feedback = document.createElement('div');
             feedback.textContent = (scoreChange > 0 ? '+' : '') + scoreChange;
-            feedback.className = 'score-feedback'; 
-            
+            feedback.className = 'score-feedback';
             // Thêm class màu sắc
             if (scoreChange > 0) {
                 feedback.classList.add('score-correct');
@@ -411,7 +445,6 @@ V_i: Giá trị của Item i
             }
 
             document.body.appendChild(feedback);
-
             // Thiết lập vị trí (ví dụ: ở góc trên bên phải)
             feedback.style.top = `${scoreElement.offsetTop}px`;
             feedback.style.left = `${scoreElement.offsetLeft + scoreElement.offsetWidth / 2}px`;
@@ -419,7 +452,7 @@ V_i: Giá trị của Item i
             // Xóa sau khi hoàn thành animation
             setTimeout(() => {
                 feedback.remove();
-            }, 1500); 
+            }, 1500);
         }
 
         let totalWeight = 0;
@@ -433,7 +466,6 @@ V_i: Giá trị của Item i
         const timerContainer = document.getElementById('timer-container');
         
         let currentTakenId = null;
-
         // Hàm định dạng thời gian (MM:SS)
         function formatTime(totalSeconds) {
             if (totalSeconds < 0) return "00:00";
@@ -447,11 +479,12 @@ V_i: Giá trị của Item i
             gameActive = false;
             // Dừng bộ đếm
             if (timerInterval) clearInterval(timerInterval);
-            
             // Vô hiệu hóa input và drag/drop
             dpBoardBody.querySelectorAll('.dp-input').forEach(input => input.disabled = true);
-            itemsContainer.querySelectorAll('.drag-item').forEach(item => item.setAttribute('draggable', 'false'));
-            knapsack.removeEventListener('drop', handleDropKnapsack); // Ngăn không cho drop nữa
+            
+            // Ẩn khu vực Knapsack
+            knapsackSection.classList.add('hidden');
+            itemsSection.classList.add('hidden');
             
             // Cập nhật giao diện
             timerDisplay.textContent = formatTime(0);
@@ -468,7 +501,7 @@ V_i: Giá trị của Item i
         // Hàm bắt đầu đếm ngược DỰA TRÊN POLLING SERVER
         function startServerPollingTimer(takenId) {
             currentTakenId = takenId; // Lưu Taken ID
-
+            console.log(currentTakenId);
             if (timerInterval) {
                 clearInterval(timerInterval);
             }
@@ -489,14 +522,12 @@ V_i: Giá trị của Item i
                             'Accept': 'application/json'
                         }
                     });
-
                     if (!response.ok) {
                         // Nếu server trả về lỗi 404 (Không tìm thấy session) hoặc 500
                         throw new Error(`Server status check failed: ${response.status}`);
                     }
                     
                     const result = await response.json();
-                    
                     let timeRemainingSeconds = result.timeRemaining;
                     let isTimeUp = result.isTimeUp; // Lấy trạng thái hết giờ từ Server
                     console.log("Thời gian",timeRemainingSeconds)   
@@ -509,7 +540,6 @@ V_i: Giá trị của Item i
 
                     // Cập nhật hiển thị bằng giá trị từ Server
                     timerDisplay.textContent = formatTime(timeRemainingSeconds);
-                    
                     // Cập nhật giao diện cảnh báo
                     if (timeRemainingSeconds <= 60 && timeRemainingSeconds > 0) {
                         timerContainer.classList.remove('bg-green-100', 'text-green-800', 'bg-gray-200');
@@ -526,7 +556,7 @@ V_i: Giá trị của Item i
                 } catch (error) {
                     console.error("Lỗi khi polling Server Status:", error);
                     // Dừng polling và thông báo lỗi nghiêm trọng
-                    if (timerInterval) clearInterval(timerInterval); 
+                    if (timerInterval) clearInterval(timerInterval);
                     timerDisplay.textContent = "Lỗi Server";
                     timerContainer.classList.add('bg-gray-500', 'text-white');
                     gameActive = false;
@@ -535,9 +565,8 @@ V_i: Giá trị của Item i
             
             // Thực hiện lần đầu ngay lập tức
             fetchTimeRemaining();
-
             // Thiết lập polling mỗi giây (1000ms)
-            timerInterval = setInterval(fetchTimeRemaining, 1000); 
+            timerInterval = setInterval(fetchTimeRemaining, 1000);
         }
 
         // Logic để gọi API bắt đầu game
@@ -551,7 +580,7 @@ V_i: Giá trị của Item i
                     // Lấy token CSRF
                     const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
                     if (!antiForgeryToken) {
-                         throw new Error("Không tìm thấy Anti-Forgery Token. Vui lòng kiểm tra Razor Page.");
+                        throw new Error("Không tìm thấy Anti-Forgery Token. Vui lòng kiểm tra Razor Page.");
                     }
                     
                     // Chuẩn bị request body (Giả định UserId là cố định cho mục đích demo)
@@ -561,7 +590,6 @@ V_i: Giá trị của Item i
                         UserId: '@Model.userId', 
                         PlayerCount: 1 
                     };
-
                     // Gửi yêu cầu POST đến API Controller
                     const response = await fetch(`/api/Game/Start`, {
                         method: 'POST',
@@ -570,7 +598,6 @@ V_i: Giá trị của Item i
                         },
                         body: JSON.stringify(requestBody)
                     });
-
                     const result = await response.json();
 
                     if (response.ok && result.success) {
@@ -578,7 +605,7 @@ V_i: Giá trị của Item i
                         startScreen.style.display = 'none';
                         takenId = result.takenId;
                         // BẮT ĐẦU ĐẾM NGƯỢC DỰA TRÊN POLLING SERVER (Taken ID)
-                        startServerPollingTimer(result.takenId); // <--- ĐÃ SỬ DỤNG LOGIC MỚI
+                        startServerPollingTimer(result.takenId);
                         
                     } else {
                         // Hiển thị lỗi từ Server
@@ -599,14 +626,13 @@ V_i: Giá trị của Item i
         function checkAllCellsCompletedAndEndGame() {
             // 1. Đếm tất cả các ô input chưa được hoàn thành
             const remainingInputCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]').length;
-
+            
             if (remainingInputCells === 0) {
                 // Tất cả các ô đã hoàn thành (qua nhập tay hoặc tiết lộ)
-                console.log("Tất cả ô input DP đã được hoàn thành. Tiến hành kết thúc game.");
-                // 2. GỌI HÀM KẾT THÚC GAME CỦA BẠN
-                // Ví dụ: endGame(true, 'DPBoardCompleted');
+                console.log("Tất cả ô input DP đã được hoàn thành. Tiến hành kết thúc game DP.");
+                // 2. GỌI HÀM KẾT THÚC GAME DP
                 if (typeof endGame === 'function') {
-                    endGame(true, 'DPBoardCompleted'); 
+                    endGame(true, 'DPBoardCompleted');
                 } else {
                     alert("Game Over: Bảng DP đã hoàn thành. Cần định nghĩa hàm endGame()!");
                 }
@@ -614,11 +640,12 @@ V_i: Giá trị của Item i
         }
 
         function findAndRevealMissedCell() {
+            // ... (Logic tiết lộ ô giữ nguyên) ...
+            
             // 1. Tìm ô input chưa hoàn thành đầu tiên để xác định giá trị mục tiêu
             const uncompletedInputCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]');
-
             if (uncompletedInputCells.length === 0) {
-                checkAllCellsCompletedAndEndGame(); 
+                checkAllCellsCompletedAndEndGame();
                 return { count: 0, value: null };
             }
 
@@ -631,18 +658,19 @@ V_i: Giá trị của Item i
             let revealedCount = 0;
             
             console.log(`Tiết lộ: ${cellsToReveal.length} ô có giá trị ${correctValue}`);
-
             // 3. Cập nhật UI cho từng ô đã chọn
             cellsToReveal.forEach(cell => {
                 // *** KIỂM TRA LOẠI Ô ***
                 const isInputCell = cell.getAttribute('data-is-input') === 'true'; 
                 
-                const cellCorrectValue = cell.getAttribute('data-correct-value');
+                const 
+                cellCorrectValue = cell.getAttribute('data-correct-value');
                 const cellContent = cell.querySelector('.cell-content');
                 
                 // Xóa input element (chỉ áp dụng cho các ô input)
                 const inputElement = cell.querySelector('.dp-input'); 
-                if (inputElement) {
+                if 
+                (inputElement) {
                     inputElement.remove(); 
                 }
 
@@ -661,7 +689,6 @@ V_i: Giá trị của Item i
 
                 newSpan.textContent = cellCorrectValue;
                 cell.appendChild(newSpan);
-                
                 // Đánh dấu ô đã hoàn thành
                 cell.setAttribute('data-is-completed', 'true');
                 cell.classList.remove('bg-yellow-50'); 
@@ -677,10 +704,8 @@ V_i: Giá trị của Item i
 
                 revealedCount++;
             });
-            
             // 4. Kiểm tra EndGame ngay sau khi tiết lộ
             checkAllCellsCompletedAndEndGame();
-            
             return { count: revealedCount, value: correctValue };
         }
 
@@ -694,7 +719,8 @@ V_i: Giá trị của Item i
                     return;
                 }
                 
-                // 2. Kiểm tra ô còn lại
+                // 2. Kiểm 
+                // tra ô còn lại
                 const uncompletedCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]');
                 if (uncompletedCells.length === 0) {
                     alert("🎉 Tất cả các ô cần điền đã được hoàn thành hoặc tiết lộ. Không cần sử dụng tính năng này nữa.");
@@ -719,7 +745,17 @@ V_i: Giá trị của Item i
         }
 
 
-        // --- Drag & Drop Knapsack Logic (Giữ nguyên) ---
+        // --- Drag & Drop Knapsack Logic ---
+        
+        // HÀM KIỂM TRA ĐẠT TỐI ƯU
+        function checkOptimalValueAndEndGame() {
+            // Tự động kết thúc nếu tổng giá trị đạt giá trị tối ưu
+            if (totalValue === OPTIMAL_VALUE) {
+                endGameKnapsack(totalWeight, totalValue, true);
+                return true;
+            }
+            return false;
+        }
 
         function updateTotals() {
             document.getElementById('total-weight').textContent = totalWeight;
@@ -735,6 +771,8 @@ V_i: Giá trị của Item i
                 knapsack.classList.remove('bg-red-50', 'border-red-500');
                 knapsack.classList.add('bg-white', 'border-gray-400');
             }
+            
+            checkOptimalValueAndEndGame(); // KIỂM TRA TỐI ƯU SAU MỖI LẦN CẬP NHẬT
         }
 
         function setupDragItems() {
@@ -743,12 +781,14 @@ V_i: Giá trị của Item i
                 item.dataset.hasEvents = true;
 
                 item.addEventListener('dragstart', (e) => {
-                    if (!item.getAttribute('draggable') || item.getAttribute('draggable') === 'false' || !gameActive) {
+                    // KHÔNG CẦN KIỂM TRA knapsackEnabled NỮA
+                    if (!item.getAttribute('draggable') || item.getAttribute('draggable') === 'false' || !gameActive) { 
                         e.preventDefault();
                         return;
                     }
                     e.dataTransfer.setData('text/plain', JSON.stringify({
                         id: item.dataset.id,
+                        name: item.dataset.name, 
                         value: parseInt(item.dataset.value),
                         weight: parseInt(item.dataset.weight),
                     }));
@@ -764,28 +804,37 @@ V_i: Giá trị của Item i
         }
         
         setupDragItems();
-
         knapsack.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (!gameActive) return;
+            if (!gameActive) return; // KHÔNG CẦN KIỂM TRA knapsackEnabled
             knapsack.classList.add('border-blue-500', 'bg-blue-50', 'border-dashed');
         });
         knapsack.addEventListener('dragleave', (e) => {
             knapsack.classList.remove('border-blue-500', 'bg-blue-50', 'border-dashed');
         });
-
-        // Hàm xử lý Drop riêng để có thể gỡ bỏ event listener khi hết giờ
+        
         function handleDropKnapsack(e) {
             e.preventDefault();
-            if (!gameActive) return;
+            if (!gameActive) return; // KHÔNG CẦN KIỂM TRA knapsackEnabled
             knapsack.classList.remove('border-blue-500', 'bg-blue-50', 'border-dashed');
 
             const data = JSON.parse(e.dataTransfer.getData('text/plain'));
             const draggedItem = itemsContainer.querySelector(`.drag-item[data-id="${data.id}"]`);
-
             if (draggedItem && draggedItem.parentNode === itemsContainer) {
                 
-                const clone = draggedItem.cloneNode(true); 
+                // KIỂM TRA SỨC CHỨA
+                if (totalWeight + data.weight > maxCapacity) {
+                    alert(`⚠️ Không thể thêm ${data.weight} kg. Túi chỉ còn trống ${maxCapacity - totalWeight} kg.`);
+                    return; 
+                }
+                
+                // Nếu đã đạt tối ưu và cố gắng thêm vật phẩm (có thể vượt quá maxCapacity), không cho phép
+                 if (totalValue === OPTIMAL_VALUE && (totalWeight + data.weight > maxCapacity || data.value > 0)) {
+                    // Nếu đã đạt tối ưu, chỉ cho phép kéo thả nếu vật phẩm mới có W=0, V=0.
+                    // Nhưng để đơn giản, ta chỉ cần kiểm tra sau khi thêm. Nếu vượt quá thì revert.
+                 }
+
+                const clone = draggedItem.cloneNode(true);
                 clone.setAttribute('draggable', 'false');
                 clone.classList.remove('hover:ring-2', 'hover:ring-blue-300', 'cursor-grab');
                 clone.classList.add('knapsack-item', 'relative', 'bg-blue-100', 'shadow-md', 'ring-2', 'ring-blue-400');
@@ -797,35 +846,46 @@ V_i: Giá trị của Item i
                 updateTotals();
 
                 knapsack.querySelector('.placeholder-content')?.remove();
-
-                draggedItem.style.opacity = '0.3';
-                draggedItem.style.cursor = 'not-allowed';
-                draggedItem.setAttribute('draggable', 'false');
+                draggedItem.remove(); // XÓA VẬT PHẨM KHỎI KHUNG CHỌN
 
                 const removeBtn = document.createElement('button');
                 removeBtn.innerHTML = '<span class="material-symbols-outlined text-sm">close</span>';
                 removeBtn.className = 'absolute top-0 right-0 p-1 text-red-600 hover:text-red-800 bg-white rounded-full leading-none shadow-md';
                 removeBtn.onclick = (event) => {
                     event.stopPropagation();
-                    removeFromKnapsack(clone, draggedItem, data);
+                    removeFromKnapsack(clone, data); 
                 };
                 clone.appendChild(removeBtn);
             }
         }
 
-        knapsack.addEventListener('drop', handleDropKnapsack); // Gắn event listener
+        knapsack.addEventListener('drop', handleDropKnapsack);
+        // Gắn event listener
 
-        function removeFromKnapsack(knapsackItemElement, originalItemElement, itemData) {
+        function removeFromKnapsack(knapsackItemElement, itemData) { 
             knapsackItemElement.remove();
-            
-            originalItemElement.style.opacity = '1';
-            originalItemElement.style.cursor = 'grab';
-            originalItemElement.setAttribute('draggable', 'true');
+
+            // TẠO LẠI VẬT PHẨM TRONG KHUNG CHỌN
+            const recreatedItem = document.createElement('div');
+            recreatedItem.className = 'drag-item bg-white p-3 rounded-lg shadow border border-gray-200 hover:ring-2 hover:ring-blue-300 transition duration-150 cursor-grab';
+            recreatedItem.setAttribute('draggable', 'true');
+            recreatedItem.setAttribute('data-id', itemData.id);
+            recreatedItem.setAttribute('data-value', itemData.value);
+            recreatedItem.setAttribute('data-weight', itemData.weight);
+            recreatedItem.setAttribute('data-name', itemData.name); 
+            recreatedItem.innerHTML = `
+                <p class="text-sm font-bold text-gray-900">${itemData.name}</p> 
+                <div class="flex justify-between text-xs mt-1">
+                    <p class="text-green-600">V: <strong>${itemData.value}</strong></p>
+                    <p class="text-red-600">W: <strong>${itemData.weight}</strong> kg</p>
+                </div>`;
+            itemsContainer.appendChild(recreatedItem);
+            setupDragItems(); // Thiết lập lại event listener cho vật phẩm mới
 
             totalWeight -= itemData.weight;
             totalValue -= itemData.value;
             updateTotals();
-
+            
             if (knapsack.children.length === 0) {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'w-full text-center text-gray-500 p-8 placeholder-content';
@@ -837,9 +897,63 @@ V_i: Giá trị của Item i
         }
 
 
-        // --- DP Table Logic (Giữ nguyên logic tiết lộ từng bước) ---
+        // 3. Logic Hoàn Thành Trò Chơi Knapsack TỰ ĐỘNG
+        function endGameKnapsack(finalWeight, finalValue, isOptimal) {
+            gameActive = false;
+            if (timerInterval) clearInterval(timerInterval);
+            
+            console.log(`Kết quả Knapsack: W=${finalWeight}, V=${finalValue}`);
+            
+            // Vô hiệu hóa Drag/Drop hoàn toàn
+            knapsack.removeEventListener('drop', handleDropKnapsack); 
+            
+            if (isOptimal) {
+                showFinalResults();
+                startConfetti();
+                alert(`🏆 CHÚC MỪNG! Bạn đã đạt được Giá Trị Tối Ưu ${finalValue} (Trọng lượng: ${finalWeight} / ${maxCapacity}). TRÒ CHƠI KẾT THÚC!`);
+            } else {
+                alert(`Game Over. Tổng Giá Trị: ${finalValue}.`);
+            }
+        }
         
-        // 2. Logic Xử Lý Input trong Bảng DP
+        // 4. Logic Hoàn Thành Trò Chơi DP (EndGame Mới)
+        function endGame(isSuccess = false, reason = 'TimeUp') { 
+            // Dừng bộ đếm thời gian khi game kết thúc thành công
+            if (timerInterval) clearInterval(timerInterval);
+            
+            // 1. Tiết lộ toàn bộ bảng DP (bao gồm cả ô mask)
+            dpBoardBody.querySelectorAll('.dp-cell').forEach(cell => {
+                 const isBoundary = parseInt(cell.dataset.i) === 0 || parseInt(cell.dataset.w) === 0;
+                 const isCompleted = cell.dataset.isCompleted === 'true';
+                 
+                 // Chỉ tiết lộ các ô chưa được hoàn thành (mask hoặc input bị bỏ sót)
+                 if (!isBoundary && !isCompleted) {
+                     const correctValue = cell.dataset.correctValue;
+                     
+                     cell.innerHTML = '';
+                     cell.classList.add('bg-gray-200'); 
+                   
+                     const finalSpan = document.createElement('span');
+                     finalSpan.className = 'dp-value text-gray-800 font-bold';
+                     finalSpan.textContent = correctValue;
+          
+                     cell.appendChild(finalSpan);
+                     cell.dataset.isCompleted = 'true';
+                 }
+            });
+            
+            // *** ĐIỂM CHÍNH: KÍCH HOẠT VÀ HIỂN THỊ KHU VỰC KNAPSACK ***
+            if (isSuccess && reason === 'DPBoardCompleted') {
+                // Hiển thị 2 khu vực Knapsack/Items
+                knapsackSection.classList.remove('hidden'); 
+                itemsSection.classList.remove('hidden');     
+                alert("🎉 CHÚC MỪNG! Bạn đã hoàn thành Bảng Quy Hoạch Động! Giờ hãy chọn vật phẩm cho túi. Game sẽ tự động kết thúc khi bạn đạt giá trị Tối Ưu.");
+            } else if (reason === 'TimeUp') {
+                // Đã xử lý trong challengeFailedByTime.
+            }
+        }
+        
+        // ... (Logic input DP giữ nguyên) ...
         dpBoardBody.querySelectorAll('.dp-input').forEach(input => {
             input.addEventListener('change', (e) => {
                 if (!gameActive) {
@@ -847,12 +961,14 @@ V_i: Giá trị của Item i
                     e.target.value = ''; // Xóa giá trị đã nhập
                     return;
                 }
-                
+            
+            
                 const inputElement = e.target;
                 const cellElement = inputElement.closest('.dp-cell');
                 const correctValue = parseInt(cellElement.dataset.correctValue);
                 const enteredValue = parseInt(inputElement.value);
-                const isCompleted = cellElement.dataset.isCompleted === 'true';
+                const isCompleted = cellElement.dataset.isCompleted 
+                    === 'true';
 
                 if (isCompleted) return; 
 
@@ -868,7 +984,6 @@ V_i: Giá trị của Item i
                     cellElement.dataset.isCompleted = 'true'; 
                     remainingInputCells--; 
                     adjustScoreOnServer(SCORE_CORRECT);
-
                     // Tiết lộ các ô *KHÔNG PHẢI INPUT* có cùng giá trị
                     dpBoardBody.querySelectorAll('.dp-cell').forEach(otherCell => {
                         const otherCorrectValue = parseInt(otherCell.dataset.correctValue);
@@ -880,6 +995,7 @@ V_i: Giá trị của Item i
                             const revealedSpan = document.createElement('span');
                             revealedSpan.className = 'dp-value text-blue-700 font-semibold';
                             revealedSpan.textContent = otherCorrectValue;
+  
                             
                             otherCell.innerHTML = '';
                             otherCell.appendChild(revealedSpan);
@@ -887,10 +1003,9 @@ V_i: Giá trị của Item i
                             otherCell.dataset.isCompleted = 'true';
                         }
                     });
-
-                    // Kiểm tra hoàn thành trò chơi
+                    // Kiểm tra hoàn thành trò chơi DP
                     if (remainingInputCells <= 0) { 
-                        setTimeout(endGame, 500);
+                        setTimeout(() => endGame(true, 'DPBoardCompleted'), 500); 
                     }
 
                 } else {
@@ -912,46 +1027,12 @@ V_i: Giá trị của Item i
             });
         });
 
-        // 3. Logic Hoàn Thành Trò Chơi
-        function endGame() {
-            gameActive = false;
-            
-            // Dừng bộ đếm thời gian khi game kết thúc thành công
-            if (timerInterval) clearInterval(timerInterval);
-            
-            // 1. Tiết lộ toàn bộ bảng DP
-            dpBoardBody.querySelectorAll('.dp-cell').forEach(cell => {
-                 const isBoundary = parseInt(cell.dataset.i) === 0 || parseInt(cell.dataset.w) === 0;
-                 const isCompleted = cell.dataset.isCompleted === 'true';
-                 
-                 if (!isBoundary && !isCompleted) {
-                     const correctValue = cell.dataset.correctValue;
-                     
-                     cell.innerHTML = '';
-                     cell.classList.add('bg-gray-200'); 
-                     
-                     const finalSpan = document.createElement('span');
-                     finalSpan.className = 'dp-value text-gray-800 font-bold';
-                     finalSpan.textContent = correctValue;
-                     cell.appendChild(finalSpan);
-                     cell.dataset.isCompleted = 'true';
-                 }
-            });
-
-            alert("🎉 CHÚC MỪNG! Bạn đã hoàn thành Bảng Quy Hoạch Động! Giờ hãy chọn vật phẩm cho túi.");
-            
-            // TODO: Bật nút SUBMIT kết quả Knapsack (Túi)
-        }
 
         // Logic khi trang được tải lại trong trạng thái game đã bắt đầu (Nếu Model.GameStarted=true)
         if (@(Model.GameStarted.ToString().ToLower())) {
             if (startScreen) {
                  startScreen.style.display = 'none';
             }
-            // LƯU Ý: Nếu game đã bắt đầu (Model.GameStarted=true), bạn cần phải TẢI LẠI TAKEN ID
-            // từ Session/LocalStorage hoặc một API /api/Game/LatestTaken/{userId} để tiếp tục startServerPollingTimer.
-            // Ví dụ: startServerPollingTimer(Model.SessionData.TakenId); 
-            // Nếu SessionData chưa được truyền qua Page Model, tính năng này sẽ không hoạt động khi F5.
         }
         
         // Logic cho Hint/Recurrence Relation
@@ -971,5 +1052,59 @@ V_i: Giá trị của Item i
                 }
             });
         }
+
+        // HÀM HIỂN THỊ KẾT QUẢ CUỐI CÙNG
+        async function showFinalResults() {
+            console.log("currentTakenId",currentTakenId)
+            if (!currentTakenId) {
+                console.error("Lỗi: Không tìm thấy Taken ID để hiển thị kết quả cuối cùng.");
+                alert("Trò chơi kết thúc! Lỗi: Không tìm thấy ID phiên chơi.");
+                return;
+            }
+
+            try {
+                // Gọi API lần cuối để lấy trạng thái game, bao gồm điểm và thời gian còn lại
+                // Giả định API /api/Game/Status/{takenId} trả về timeRemaining và currentScore
+                const response = await fetch(`/api/Game/Status/${currentTakenId}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server status check failed: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                const finalTimeRemaining = result.timeRemaining || 0;
+                const finalScore = result.currentScore || parseInt(scoreElement.textContent) || 0;
+
+                // Tính toán thời gian đã sử dụng
+                let timeUsedSeconds = MAX_DURATION_SECONDS - finalTimeRemaining;
+                if (timeUsedSeconds < 0) timeUsedSeconds = MAX_DURATION_SECONDS; // Đảm bảo không âm
+                // Cập nhật điểm hiển thị lần cuối
+                scoreElement.textContent = finalScore;
+                optimalValueDisplay.textContent = OPTIMAL_VALUE;
+                finalScoreDisplay.textContent = `${finalScore} điểm`;
+                timeUsedDisplay.textContent = formatTime(timeUsedSeconds);
+
+                finalResultsModal.classList.remove('hidden');
+
+            } catch (error) {
+                console.error("Lỗi khi lấy kết quả cuối cùng:", error);
+                alert(`Trò chơi kết thúc! Lỗi khi lấy kết quả cuối cùng từ server. Vui lòng kiểm tra console.`);
+            }
+        }
+
+        function startConfetti() {
+            var end = Date.now() + (8 * 1000);
+            var colors = ['#bb0000', '#ffffff'];
+            (function frame() {
+                confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: colors });
+                confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors: colors });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            })();
+        }
     </script>
+    }
 </body>

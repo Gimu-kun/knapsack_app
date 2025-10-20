@@ -65,7 +65,7 @@ namespace knapsack_app.Pages.Cli
                     });
                 }
                 
-                return RedirectToPage("/Index"); 
+                return RedirectToPage("/Cli/Home"); 
             }
             else
             {
