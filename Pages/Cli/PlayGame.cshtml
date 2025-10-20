@@ -386,6 +386,8 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         const finalScoreDisplay = document.getElementById('final-score-display');
         const timeUsedDisplay = document.getElementById('time-used-display');
         const optimalValueDisplay = document.getElementById('optimal-value-display');
+        const countdownModal = document.getElementById('countdown-modal');
+        const countdownDisplay = document.getElementById('countdown-display');
         // --- KẾT THÚC KHAI BÁO CÁC BIẾN MỚI ---
 
         // Điểm thưởng/phạt
@@ -569,57 +571,86 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             timerInterval = setInterval(fetchTimeRemaining, 1000);
         }
 
-        // Logic để gọi API bắt đầu game
-        if (startGameBtn && startScreen) {
-            startGameBtn.addEventListener('click', async () => {
-                // Tắt nút để tránh click kép và cung cấp phản hồi
-                startGameBtn.disabled = true; 
-                startGameBtn.textContent = 'Đang tải...';
-
-                try {
-                    // Lấy token CSRF
-                    const antiForgeryToken = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
-                    if (!antiForgeryToken) {
-                        throw new Error("Không tìm thấy Anti-Forgery Token. Vui lòng kiểm tra Razor Page.");
-                    }
-                    
-                    // Chuẩn bị request body (Giả định UserId là cố định cho mục đích demo)
-                    const requestBody = {
+        async function startGameLogic() {
+            try {
+                // Gửi yêu cầu POST đến API Controller
+                const response = await fetch(`/api/Game/Start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
                         ChallengeId: challengeId,
-                        // Trong thực tế, UserId nên lấy từ Session/Token, không nên dựa vào FE gửi lên.
                         UserId: '@Model.userId', 
                         PlayerCount: 1 
-                    };
-                    // Gửi yêu cầu POST đến API Controller
-                    const response = await fetch(`/api/Game/Start`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(requestBody)
-                    });
-                    const result = await response.json();
+                    })
+                });
+                const result = await response.json();
 
-                    if (response.ok && result.success) {
-                        gameActive = true;
-                        startScreen.style.display = 'none';
-                        takenId = result.takenId;
-                        // BẮT ĐẦU ĐẾM NGƯỢC DỰA TRÊN POLLING SERVER (Taken ID)
-                        startServerPollingTimer(result.takenId);
-                        
-                    } else {
-                        // Hiển thị lỗi từ Server
-                        const errorMessage = result.message || `Lỗi không xác định: ${response.status} - ${JSON.stringify(result)}`;
-                        alert(`Lỗi khi bắt đầu game: ${errorMessage}`);
-                        startGameBtn.disabled = false;
-                        startGameBtn.textContent = '🔥 BẮT ĐẦU TRÒ CHƠI';
-                    }
-
-                } catch (error) {
-                    alert(`Lỗi mạng hoặc hệ thống: ${error.message}`);
+                if (response.ok && result.success) {
+                    gameActive = true;
+                    startScreen.style.display = 'none';
+                    takenId = result.takenId;
+                    // BẮT ĐẦU ĐẾM NGƯỢC DỰA TRÊN POLLING SERVER (Taken ID)
+                    startServerPollingTimer(result.takenId);
+                    
+                } else {
+                    // Hiển thị lỗi từ Server
+                    const errorMessage = result.message || `Lỗi không xác định: ${response.status} - ${JSON.stringify(result)}`;
+                    alert(`Lỗi khi bắt đầu game: ${errorMessage}`);
                     startGameBtn.disabled = false;
                     startGameBtn.textContent = '🔥 BẮT ĐẦU TRÒ CHƠI';
+                    countdownModal.classList.add('hidden'); // Ẩn countdown nếu có lỗi
                 }
+
+            } catch (error) {
+                alert(`Lỗi mạng hoặc hệ thống: ${error.message}`);
+                startGameBtn.disabled = false;
+                startGameBtn.textContent = '🔥 BẮT ĐẦU TRÒ CHƠI';
+                countdownModal.classList.add('hidden'); // Ẩn countdown nếu có lỗi
+            }
+        }
+
+        // Hàm xử lý đếm ngược 3, 2, 1
+        function startCountdown() {
+            countdownModal.classList.remove('hidden');
+            startScreen.classList.add('hidden');
+            let count = 3;
+            
+            // Bắt đầu với 3
+            countdownDisplay.textContent = count;
+            
+            const interval = setInterval(() => {
+                count--;
+                
+                // Loại bỏ và thêm lại class animate-pulse để đảm bảo animation chạy lại trên một số trình duyệt
+                countdownDisplay.classList.remove('animate-pulse');
+                void countdownDisplay.offsetWidth; // Buộc trình duyệt reflow
+                countdownDisplay.classList.add('animate-pulse');
+                
+                if (count > 0) {
+                    countdownDisplay.textContent = count;
+                } else if (count === 0) {
+                    countdownDisplay.textContent = 'Bắt đầu!';
+                } else {
+                    // Đếm ngược kết thúc
+                    clearInterval(interval);
+                    countdownModal.classList.add('hidden');
+                    // GỌI LOGIC BẮT ĐẦU GAME THẬT
+                    startGameLogic(); 
+                }
+            }, 1000);
+        }
+
+        // Logic để gọi API bắt đầu game (Đã thay bằng startCountdown)
+        if (startGameBtn && startScreen) {
+            startGameBtn.addEventListener('click', () => {
+                // Tắt nút để tránh click kép và cung cấp phản hồi
+                startGameBtn.disabled = true; 
+                startGameBtn.textContent = 'Đang chuẩn bị...';
+                
+                // Bắt đầu đếm ngược
+                startCountdown();
             });
         }
 
