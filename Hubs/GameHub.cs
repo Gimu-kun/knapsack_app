@@ -30,9 +30,11 @@ public class GameHub : Hub
     // Key: RoomId (string), Value: RoomState
     private static ConcurrentDictionary<string, RoomState> Rooms = new ConcurrentDictionary<string, RoomState>();
 
-    // 1. JoinRoom: Cập nhật để khởi tạo RoomState và gửi độ khó
+    // 1. JoinRoom: ... (giữ nguyên)
     public async Task JoinRoom(string roomId, string userId, string username, string avatar)
     {
+        // ... (Logic JoinRoom giữ nguyên)
+
         await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
 
         var roomState = Rooms.GetOrAdd(roomId, new RoomState());
@@ -67,9 +69,10 @@ public class GameHub : Hub
         await Clients.Group(roomId).SendAsync("PlayersUpdated", room);
     }
 
-    // ✅ 2. SetDifficulty: Host gọi để cập nhật độ khó
+    // 2. SetDifficulty: ... (giữ nguyên)
     public async Task SetDifficulty(string roomId, string difficulty)
     {
+        // ... (Logic SetDifficulty giữ nguyên)
         if (Rooms.TryGetValue(roomId, out var roomState))
         {
             var player = roomState.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
@@ -84,10 +87,11 @@ public class GameHub : Hub
         }
     }
 
-    // ✅ 3. StartGame: Host gọi để bắt đầu game
+    // 3. StartGame: ... (giữ nguyên)
     public async Task StartGame(string roomId, string difficulty)
     {
-         if (Rooms.TryGetValue(roomId, out var roomState))
+        // ... (Logic StartGame giữ nguyên)
+        if (Rooms.TryGetValue(roomId, out var roomState))
         {
             var player = roomState.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
             
@@ -105,7 +109,37 @@ public class GameHub : Hub
         }
     }
 
-    // 4. OnDisconnectedAsync: Xử lý khi người chơi rời đi/mất kết nối
+    // ✅ 4. KickPlayer: Host gọi để kick người chơi (Sử dụng ConnectionId hoặc UserId để xác định)
+    public async Task KickPlayer(string roomId, string userIdToKick)
+    {
+        if (Rooms.TryGetValue(roomId, out var roomState))
+        {
+            var kicker = roomState.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
+            
+            // 1. Kiểm tra xem người gọi có phải là Host không
+            if (kicker != null && kicker.IsHost)
+            {
+                // 2. Tìm người chơi cần kick (dùng UserId vì nó ổn định hơn ConnectionId)
+                var playerToKick = roomState.Players.FirstOrDefault(p => p.UserId == userIdToKick);
+                
+                if (playerToKick != null && playerToKick.UserId != kicker.UserId) // Không cho Host tự kick mình
+                {
+                    // 3. Gửi thông báo "bị kick" đến người chơi đó
+                    await Clients.Client(playerToKick.ConnectionId).SendAsync("KickedFromRoom");
+
+                    // 4. Xóa người chơi khỏi nhóm và khỏi trạng thái phòng
+                    await Groups.RemoveFromGroupAsync(playerToKick.ConnectionId, roomId);
+                    roomState.Players.Remove(playerToKick);
+
+                    // 5. Thông báo cập nhật danh sách người chơi cho cả phòng
+                    await Clients.Group(roomId).SendAsync("PlayersUpdated", roomState.Players);
+                }
+            }
+        }
+    }
+
+
+    // 5. OnDisconnectedAsync: Xử lý khi người chơi rời đi/mất kết nối (giữ nguyên)
     public override async Task OnDisconnectedAsync(Exception exception)
     {
         string connectionId = Context.ConnectionId;

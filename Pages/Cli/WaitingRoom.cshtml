@@ -3,7 +3,7 @@
 @{
     Layout = "_Cli_Layout";
 }
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=person_add" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=person_add,gpp_bad" />
 
 <section class="py-12 bg-gray-50 min-h-screen">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -71,8 +71,8 @@
     const currentUsername = "@Model.CurrentUser?.Account";
     const currentAvatar = "@Model.CurrentUser?.Avatar";
 
-    // ✅ THÊM BIẾN LƯU TRỮ ĐỘ KHÓ HIỆN TẠI
     let currentDifficulty = 'easy';
+    const roomId = "@Model.Id"; // Lấy ID phòng trực tiếp từ Model
 
     // Hàm chuyển đổi giá trị độ khó sang chuỗi hiển thị
     function getDifficultyText(value) {
@@ -96,9 +96,6 @@
 
 
     $(document).ready(function () {
-        const urlParams = new URLSearchParams(window.location.search);
-        const roomId = urlParams.get('id');
-        
         if (!currentUserId || !currentUsername) {
             window.location.href = '/login';
             return;
@@ -125,7 +122,7 @@
             updatePlayerList(players);
         });
         
-        // ✅ THÊM: 3. Lắng nghe cập nhật Độ khó
+        // 3. Lắng nghe cập nhật Độ khó
         connection.on("DifficultyUpdated", function (difficulty) {
             currentDifficulty = difficulty;
             const diffText = getDifficultyText(difficulty);
@@ -137,39 +134,54 @@
             // Cập nhật thông báo chờ cho Member
             if (!isHost) {
                 $('#member-difficulty-message p').text(`Độ khó đã được đặt là: ${diffText}`);
+            } else {
+                // Đồng bộ hóa select với độ khó hiện tại
+                $('#difficulty-select').val(currentDifficulty);
             }
         });
 
 
         // 4. Lắng nghe thông báo về Vai trò (Host/Member)
         connection.on("RoleAssigned", function (isHostRole) {
-            isHost = isHostRole;
+        isHost = isHostRole;
+        
+        // Cập nhật hiển thị nút Bắt đầu và control độ khó
+        if (isHost) {
+            $('#btn-start-game').removeClass('hidden');
+            $('#waiting-for-host-message').addClass('hidden');
             
-            // Cập nhật hiển thị nút Bắt đầu và control độ khó
-            if (isHost) {
-                $('#btn-start-game').removeClass('hidden');
-                $('#waiting-for-host-message').addClass('hidden');
-                
-                // HOST CONTROL
-                $('#host-difficulty-control').removeClass('hidden');
-                $('#member-difficulty-message').addClass('hidden');
-                
-                // Đồng bộ hóa select với độ khó hiện tại (nếu Host mới tham gia)
-                $('#difficulty-select').val(currentDifficulty);
-            } else {
-                $('#btn-start-game').addClass('hidden');
-                $('#waiting-for-host-message').removeClass('hidden');
-                
-                // MEMBER VIEW
-                $('#host-difficulty-control').addClass('hidden');
-                $('#member-difficulty-message').removeClass('hidden');
-            }
-        });
+            // HOST CONTROL
+            $('#host-difficulty-control').removeClass('hidden');
+            $('#member-difficulty-message').addClass('hidden');
+            
+            // ✅ XÓA LỆNH GỌI LẶP LẠI JoinRoom Ở ĐÂY!
+            // VÌ JoinRoom ban đầu hoặc PlayersUpdated đã cung cấp đủ thông tin.
+            
+            // Đồng bộ hóa select với độ khó hiện tại (nếu Host mới tham gia)
+            $('#difficulty-select').val(currentDifficulty);
+
+        } else {
+            // ... (phần Member View giữ nguyên)
+            $('#btn-start-game').addClass('hidden');
+            $('#waiting-for-host-message').removeClass('hidden');
+            
+            // MEMBER VIEW
+            $('#host-difficulty-control').addClass('hidden');
+            $('#member-difficulty-message').removeClass('hidden');
+        }
+    });
 
         // 5. Lắng nghe lệnh Bắt đầu Trò chơi
         connection.on("GameStarted", function (roomId, difficulty) {
             alert(`Trò chơi bắt đầu với độ khó: ${getDifficultyText(difficulty)}`);
             window.location.href = `/play?room=${roomId}&difficulty=${difficulty}`;
+        });
+        
+        // ✅ 6. Lắng nghe lệnh Bị Kick
+        connection.on("KickedFromRoom", function () {
+            alert("Bạn đã bị Chủ phòng kick ra khỏi phòng. Bạn sẽ được chuyển hướng.");
+            // Chuyển hướng người chơi
+            window.location.href = "/selection"; 
         });
         
         // --- Hàm giao diện ---
@@ -187,6 +199,20 @@
                     ? `<span class="absolute top-0 right-0 mt-2 mr-2 text-xs font-bold uppercase text-white bg-indigo-600 px-2 py-1 rounded-full">Chủ Phòng</span>`
                     : '';
 
+                let kickButton = '';
+                if (isHost && !isMe) { // Chỉ hiển thị nút Kick nếu là Host VÀ không phải là chính mình
+                    kickButton = `
+                        <button 
+                            data-user-id="${player.userId}"
+                            data-username="${player.username}"
+                            class="kick-button absolute top-0 right-0 mb-2 mr-2 text-red-500  p-2  transition duration-150 hover:text-red-300"
+                            title="Kick ${player.username} ra khỏi phòng"
+                        >
+                            <span class="material-symbols-outlined text-lg">X</span>
+                        </button>
+                    `;
+                }
+
                 let avatarContent;
                 if (player.avatar && player.avatar.trim() !== "") {
                     // Nếu có Avatar, hiển thị ảnh
@@ -195,7 +221,7 @@
                     // Nếu không có Avatar, hiển thị chữ cái đầu
                     avatarContent = `
                         <div class="h-full w-full rounded-full flex items-center justify-center text-gray-700 font-extrabold text-2xl">
-                             ${player.username.substring(0, 1).toUpperCase()}
+                            ${player.username.substring(0, 1).toUpperCase()}
                         </div>
                     `;
                 }
@@ -212,6 +238,7 @@
                         <p class="text-sm text-gray-600">
                             Điểm tích luỹ: <span class="font-extrabold text-green-600">${player.score.toLocaleString('vi-VN')}</span>
                         </p>
+                        ${kickButton}
                     </div>`;
                 container.append(playerHtml);
             });
@@ -227,10 +254,29 @@
                     </div>`;
                 container.append(emptySlotHtml);
             }
+            
+            // ✅ Gắn sự kiện cho các nút Kick sau khi danh sách được render
+            attachKickEvents();
+        }
+        
+        function attachKickEvents() {
+            $('.kick-button').on('click', function(e) {
+                e.preventDefault();
+                const userIdToKick = $(this).data('user-id');
+                const usernameToKick = $(this).data('username');
+
+                if (confirm(`Bạn có chắc chắn muốn kick ${usernameToKick} ra khỏi phòng không?`)) {
+                    // Gọi hàm KickPlayer trên Hub
+                    connection.invoke("KickPlayer", roomId, userIdToKick).catch(function (err) {
+                        return console.error("Error kicking player: " + err.toString());
+                    });
+                }
+            });
         }
 
         // --- Khởi tạo và Bắt đầu ---
         connection.start().then(function () {
+            // Lần đầu kết nối, tham gia phòng
             connection.invoke("JoinRoom", roomId, currentUserId, currentUsername, currentAvatar).catch(function (err) {
                 return console.error(err.toString());
             });
@@ -250,16 +296,12 @@
         });
 
 
-        // --- Xử lý nút bấm ---
-
+        // --- Xử lý nút bấm Bắt đầu ---
         $('#btn-start-game').on('click', function(e) {
             e.preventDefault();
             if (isHost) {
-                // Lấy độ khó đã chọn cuối cùng
-                const selectedDifficulty = $('#difficulty-select').val();
-                
-                // Gửi lệnh StartGame lên Hub, kèm theo độ khó
-                connection.invoke("StartGame", roomId, selectedDifficulty).catch(function (err) {
+                // Lấy độ khó đã chọn cuối cùng (được cập nhật trong currentDifficulty)
+                connection.invoke("StartGame", roomId, currentDifficulty).catch(function (err) {
                     return console.error("Error starting game: " + err.toString());
                 });
             } else {
