@@ -3,42 +3,47 @@
 @{
     Layout = "_Cli_Layout";
 }
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&icon_names=person_add,gpp_bad" />
 
-<section class="py-12 bg-gray-50 min-h-screen">
+<section class="py-2 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        
-        <div class="text-center mb-10">
-            <h1 class="text-5xl font-extrabold tracking-tight text-indigo-700">
-                Phòng Chờ
-            </h1>
-            <p class="mt-4 text-xl text-gray-600">Mã Phòng của bạn:</p>
-            <div class="flex items-center inline-block p-4 mt-2 bg-white border-4 border-indigo-400 rounded-xl shadow-lg transform hover:scale-[1.01] transition duration-200 cursor-pointer">
-                <span id="room-id-display" class="text-4xl font-mono text-indigo-900 tracking-wider font-extrabold select-all" onclick="navigator.clipboard.writeText('@Model.Id'); alert('Đã sao chép mã phòng!')">
-                    @Model.Id 
-                </span>
+        <div class="flex sm:flex-column">
+            <div class="flex-1 text-center mb-10">
+                <h1 class="text-4xl font-extrabold tracking-tight text-indigo-700">
+                    Phòng Chờ
+                </h1>
+                <p class="mt-4 text-xl text-gray-600">Mã Phòng của bạn:</p>
+                <div class="flex items-center inline-block p-4 mt-2 bg-white border-4 border-indigo-400 rounded-xl shadow-lg transform hover:scale-[1.01] transition duration-200 cursor-pointer">
+                    <span id="room-id-display" class="text-3xl font-mono text-indigo-900 tracking-wider font-extrabold select-all" onclick="navigator.clipboard.writeText('@Model.Id'); alert('Đã sao chép mã phòng!')">
+                        @Model.Id 
+                    </span>
+                </div>
             </div>
-        </div>
 
-        <div class="max-w-xl mx-auto mb-10 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
-            <div class="flex items-center justify-between">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    👑 Cài đặt trò chơi
-                </h2>
-                <span id="difficulty-display" class="text-xl font-extrabold text-green-600">DỄ</span> 
-            </div>
-            
-            <div id="host-difficulty-control" class="mt-4 hidden">
-                <label for="difficulty-select" class="block text-sm font-medium text-gray-700 mb-2">Chọn Độ Khó:</label>
-                <select id="difficulty-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg rounded-md">
-                    <option value="easy">Dễ</option>
-                    <option value="medium">Trung bình</option>
-                    <option value="hard">Khó</option>
-                </select>
-            </div>
-            
-            <div id="member-difficulty-message" class="mt-4 text-center p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
-                <p class="text-indigo-700 font-medium">Đang chờ Chủ phòng thiết lập độ khó...</p>
+            <div class="flex-1 mx-5 mb-10 p-6 bg-white rounded-xl shadow-lg border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                        👑 Cài đặt trò chơi
+                    </h2>
+                    <span id="difficulty-display" class="text-xl font-extrabold text-green-600">DỄ</span> 
+                </div>
+                
+                <div id="host-difficulty-control" class="mt-4 hidden">
+                    <label for="difficulty-select" class="block text-sm font-medium text-gray-700 mb-2">Chọn Độ Khó:</label>
+                    <select id="difficulty-select" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg rounded-md">
+                        <option value="easy">Dễ</option>
+                        <option value="medium">Trung bình</option>
+                        <option value="hard">Khó</option>
+                    </select>
+                </div>
+
+                <div id="host-team-name" class="mt-4 hidden">
+                    <label for="team-name-input" class="block text-sm font-medium text-gray-700 mb-2">Tên đội:</label>
+                    <input id="team-name-input" type="text" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-lg rounded-md"/>
+                </div>
+                
+                <div id="member-difficulty-message" class="mt-4 text-center p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+                    <p class="text-indigo-700 font-medium">Đang chờ Chủ phòng thiết lập độ khó...</p>
+                </div>
             </div>
         </div>
 
@@ -72,6 +77,7 @@
     const currentAvatar = "@Model.CurrentUser?.Avatar";
 
     let currentDifficulty = 'easy';
+    let currentPlayers = [];
     const roomId = "@Model.Id"; // Lấy ID phòng trực tiếp từ Model
 
     // Hàm chuyển đổi giá trị độ khó sang chuỗi hiển thị
@@ -81,6 +87,17 @@
             case 'medium': return 'TRUNG BÌNH';
             case 'hard': return 'KHÓ';
             default: return 'Không xác định';
+        }
+    }
+
+    // Hàm chuyển đổi giá trị độ khó sang int
+    function getDifficultyInt(value) {
+        console.log(value)
+        switch (value) {
+            case 'easy': return 1;
+            case 'medium': return 2;
+            case 'hard': return 3;
+            default: return 0;
         }
     }
     
@@ -119,6 +136,7 @@
         // 2. Lắng nghe cập nhật danh sách người chơi
         connection.on("PlayersUpdated", function (players) {
             console.log("Danh sách người chơi cập nhật:", players);
+            currentPlayers = players;
             updatePlayerList(players);
         });
         
@@ -152,6 +170,7 @@
             
             // HOST CONTROL
             $('#host-difficulty-control').removeClass('hidden');
+            $('#host-team-name').removeClass('hidden');
             $('#member-difficulty-message').addClass('hidden');
             
             // ✅ XÓA LỆNH GỌI LẶP LẠI JoinRoom Ở ĐÂY!
@@ -167,14 +186,16 @@
             
             // MEMBER VIEW
             $('#host-difficulty-control').addClass('hidden');
+            $('#host-team-name').addClass('hidden');
             $('#member-difficulty-message').removeClass('hidden');
         }
     });
 
         // 5. Lắng nghe lệnh Bắt đầu Trò chơi
-        connection.on("GameStarted", function (roomId, difficulty) {
+        connection.on("GameStarted", function (roomId, difficulty, url) {
             alert(`Trò chơi bắt đầu với độ khó: ${getDifficultyText(difficulty)}`);
-            window.location.href = `/play?room=${roomId}&difficulty=${difficulty}`;
+            console.log("chuyển trang tới",url);
+            window.location.href = `${url}`;
         });
         
         // ✅ 6. Lắng nghe lệnh Bị Kick
@@ -247,8 +268,8 @@
             for (let i = players.length; i < 4; i++) {
                  const emptySlotHtml = `
                     <div class="p-5 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex flex-col items-center justify-center space-y-2 min-h-[180px]">
-                        <span class="material-symbols-outlined text-gray-400 text-4xl">
-                            person_add
+                        <span class="text-gray-400 text-4xl">
+                            ⌛ 
                         </span>
                         <p class="font-semibold text-gray-500 text-base">Đang chờ người chơi...</p>
                     </div>`;
@@ -295,15 +316,56 @@
             }
         });
 
+        // Hàm tạo ID phòng ngẫu nhiên
+        function generateTeamId() {
+            // Tạo 5 chữ số ngẫu nhiên
+            const randomDigits = Math.floor(10000 + Math.random() * 90000);
+            return `T-${randomDigits}`;
+        }
+
 
         // --- Xử lý nút bấm Bắt đầu ---
-        $('#btn-start-game').on('click', function(e) {
+        $('#btn-start-game').on('click',async function(e) {
+            const diffInt = $('#difficulty-select').val();
+            const apiEndpoint = `/api/Challenge/random?difficulty=${getDifficultyInt(diffInt)}`;
             e.preventDefault();
             if (isHost) {
-                // Lấy độ khó đã chọn cuối cùng (được cập nhật trong currentDifficulty)
-                connection.invoke("StartGame", roomId, currentDifficulty).catch(function (err) {
-                    return console.error("Error starting game: " + err.toString());
-                });
+                try {
+                    // Gọi API để lấy đề bài ngẫu nhiên
+                    const response = await fetch(apiEndpoint, {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            // Cần thêm header Authorization nếu API yêu cầu token
+                            // 'Authorization': 'Bearer ' + localStorage.getItem('authToken') 
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const challengeId = data.id;
+
+                        // Chuyển hướng đến trang chơi game
+                        // players=1 (mặc định 1 người chơi)
+                        // difficulty={difficultyInt}
+                        // challenge_id={challengeId}
+                        const redirectUrl = `/play?players=${currentPlayers.length}&difficulty=${getDifficultyInt($("#difficulty-select").val())}&challenge_id=${challengeId}&teamId=${generateTeamId()}&roomId=${roomId}&teamName=${$("#team-name-input").val()}`;
+                        // Lấy độ khó đã chọn cuối cùng (được cập nhật trong currentDifficulty)
+                        connection.invoke("StartGame", roomId, currentDifficulty, redirectUrl).catch(function (err) {
+                            return console.error("Error starting game: " + err.toString());
+                        });
+                    } else if (response.status === 404) {
+                        const errorData = await response.json();
+                        alert(`Lỗi: ${errorData.message || 'Không tìm thấy đề bài nào cho độ khó này.'}`);
+                    } else {
+                        // Xử lý các lỗi khác (400 Bad Request, 500 Internal Server Error)
+                        const errorData = await response.json();
+                        alert(`Lỗi khi lấy đề bài: ${errorData.message || 'Đã xảy ra lỗi không xác định.'}`);
+                    }
+                } catch (error) {
+                    console.error('Lỗi API:', error);
+                    alert('Lỗi kết nối hoặc xử lý dữ liệu.');
+                }
             } else {
                 alert("Bạn không phải Chủ phòng để bắt đầu trò chơi.");
             }

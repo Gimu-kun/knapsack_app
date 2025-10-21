@@ -31,6 +31,14 @@ namespace knapsack_app.Pages.Cli
         // 1. DỮ LIỆU ĐẦU VÀO TỪ SERVER (INPUT DATA)
         [BindProperty(SupportsGet = true)]
         public string Challenge_id { get; set; } = string.Empty;
+        [BindProperty(SupportsGet = true)]
+        public string? RoomId { get; set; } = string.Empty;
+        [BindProperty(SupportsGet = true)]
+        public string? TeamId { get; set; } = string.Empty;
+        [BindProperty(SupportsGet = true)]
+        public int? Players { get; set; } = 1;
+        [BindProperty(SupportsGet = true)]
+        public string? TeamName { get; set; } = string.Empty;
         public GameSessionStarted SessionData { get; set; } = new GameSessionStarted();
         public GameData InputGameData { get; set; } = new GameData();
         public List<KnapsackItem> Items { get; set; } = new List<KnapsackItem>();

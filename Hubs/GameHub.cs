@@ -88,7 +88,7 @@ public class GameHub : Hub
     }
 
     // 3. StartGame: ... (giữ nguyên)
-    public async Task StartGame(string roomId, string difficulty)
+    public async Task StartGame(string roomId, string difficulty, string url)
     {
         // ... (Logic StartGame giữ nguyên)
         if (Rooms.TryGetValue(roomId, out var roomState))
@@ -101,7 +101,7 @@ public class GameHub : Hub
                 // Logic chuẩn bị trò chơi (tạo challenge, v.v...)
                 
                 // Thông báo cho TẤT CẢ mọi người trong phòng và chuyển hướng
-                await Clients.Group(roomId).SendAsync("GameStarted", roomId, difficulty);
+                await Clients.Group(roomId).SendAsync("GameStarted", roomId, difficulty,url);
                 
                 // (Tùy chọn) Xóa phòng sau khi game bắt đầu nếu cần
                 // Rooms.TryRemove(roomId, out _);
