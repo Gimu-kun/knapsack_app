@@ -394,6 +394,13 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         const SCORE_CORRECT = 500;
         const SCORE_INCORRECT = -100;
         const REVEAL_COST = 1000;
+
+        // Hàm tạo ID phòng ngẫu nhiên
+        function generateTeamId() {
+            // Tạo 5 chữ số ngẫu nhiên
+            const randomDigits = Math.floor(10000 + Math.random() * 90000); 
+            return `T-${randomDigits}`;
+        }
         
         const scoreElement = document.getElementById('current-score');
         async function adjustScoreOnServer(scoreChange) {

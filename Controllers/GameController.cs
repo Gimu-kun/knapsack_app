@@ -38,8 +38,6 @@ namespace knapsack_app.Controllers
 
             try
             {
-
-                Console.WriteLine("ID nè--------------" + request.ChallengeId);
                 // 1. Lấy thông tin MaxDuration từ Challenge
                 ChallengeCreateEditModel challengeInfo = await _challengeService.GetChallengeByIdAsync(request.ChallengeId);
                 if (challengeInfo == null)
