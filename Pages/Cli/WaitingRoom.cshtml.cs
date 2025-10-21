@@ -45,7 +45,6 @@ namespace knapsack_app.Pages.Cli
                 {
                     // 3. Lấy UserId từ claim
                     var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                    
                     if (!string.IsNullOrEmpty(userId))
                     {
                         // 4. Lấy thông tin người dùng từ DB

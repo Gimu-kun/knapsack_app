@@ -8,6 +8,8 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using knapsack_app.ViewModels;
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
+using knapsack_app.Models;
 
 namespace knapsack_app.Pages.Cli
 {
@@ -20,25 +22,26 @@ namespace knapsack_app.Pages.Cli
     {
         private readonly HttpClient _httpClient;
         private readonly JwtService _jwtService;
+        private readonly UserService _userService;
         private const string ApiBaseUrl = "http://localhost:5238/api/Challenge/"; 
 
-        public PlayGameModel(HttpClient httpClient, JwtService jwtService)
+        public PlayGameModel(HttpClient httpClient, JwtService jwtService, UserService userService)
         {
             _httpClient = httpClient;
             _jwtService = jwtService;
+            _userService = userService;
         }
 
         // 1. DỮ LIỆU ĐẦU VÀO TỪ SERVER (INPUT DATA)
         [BindProperty(SupportsGet = true)]
         public string Challenge_id { get; set; } = string.Empty;
         [BindProperty(SupportsGet = true)]
-        public string? RoomId { get; set; } = string.Empty;
+        public string? RoomId { get; set; }
         [BindProperty(SupportsGet = true)]
-        public string? TeamId { get; set; } = string.Empty;
+        public string? TeamId { get; set; }
         [BindProperty(SupportsGet = true)]
-        public int? Players { get; set; } = 1;
-        [BindProperty(SupportsGet = true)]
-        public string? TeamName { get; set; } = string.Empty;
+        public string? TeamName { get; set; }
+        public int Players { get; set; } = 1;
         public GameSessionStarted SessionData { get; set; } = new GameSessionStarted();
         public GameData InputGameData { get; set; } = new GameData();
         public List<KnapsackItem> Items { get; set; } = new List<KnapsackItem>();
@@ -57,6 +60,7 @@ namespace knapsack_app.Pages.Cli
         public int dpCols => DPBoard.GetLength(1);
         public int capacity => InputGameData.MaxCapacity;
         public string? userId;
+        public UserModel CurrentUser { get; set; } = null;
         
         // Số lượng ô cần người dùng điền (không tính hàng 0 và cột 0)
         public int? InteractiveCells 
@@ -103,7 +107,7 @@ namespace knapsack_app.Pages.Cli
             // ✅ Đến đây, bạn đã có userId hợp lệ để sử dụng
             // Ví dụ: truyền vào API hoặc dùng để log
             Console.WriteLine("Đăng nhập thành công với userId: " + userId);
-    
+            CurrentUser = await _userService.GetUserById(userId);
             if (string.IsNullOrEmpty(Challenge_id))
             {
                 return RedirectToPage("/Error"); 

@@ -115,13 +115,13 @@ public class GameHub : Hub
         if (Rooms.TryGetValue(roomId, out var roomState))
         {
             var kicker = roomState.Players.FirstOrDefault(p => p.ConnectionId == Context.ConnectionId);
-            
+
             // 1. Kiểm tra xem người gọi có phải là Host không
             if (kicker != null && kicker.IsHost)
             {
                 // 2. Tìm người chơi cần kick (dùng UserId vì nó ổn định hơn ConnectionId)
                 var playerToKick = roomState.Players.FirstOrDefault(p => p.UserId == userIdToKick);
-                
+
                 if (playerToKick != null && playerToKick.UserId != kicker.UserId) // Không cho Host tự kick mình
                 {
                     // 3. Gửi thông báo "bị kick" đến người chơi đó
@@ -136,6 +136,34 @@ public class GameHub : Hub
                 }
             }
         }
+    }
+    
+    // ✅ PHƯƠNG THỨC MỚI: Đồng bộ trạng thái ô DP
+    // Khi một người chơi nhập giá trị vào ô [i, w], gửi cập nhật đến người khác.
+    public async Task SendCellUpdate(string roomId, int i, int w, int value, bool isCorrect)
+    {
+        // Gửi cập nhật đến TẤT CẢ người chơi trong phòng (trừ người gửi - OthersInGroup)
+        await Clients.OthersInGroup(roomId).SendAsync("ReceiveCellUpdate", i, w, value, isCorrect);
+    }
+
+    // ✅ PHƯƠNG THỨC MỚI: Đồng bộ điểm số
+    // API Server nên gọi Hub (thông qua IHubContext) để gửi điểm. 
+    // Phương thức này cho phép client cập nhật điểm số chung của đội/phòng.
+    public async Task SendScoreDeduct(string roomId, int i, int w, int scoreChange)
+    {
+        await Clients.OthersInGroup(roomId).SendAsync("ReceiveScoreDeduct", i, w, scoreChange);
+    }
+    
+    public async Task SendFindAndRevealCell(string roomId)
+    {
+        await Clients.OthersInGroup(roomId).SendAsync("ReceiveFindAndRevealCell");
+    }
+
+    // ✅ PHƯƠNG THỨC MỚI: Đồng bộ trạng thái bắt đầu trò chơi (Chỉ Host mới gọi)
+    public async Task SignalGameStarted(string roomId)
+    {
+        // Gửi thông báo đến TẤT CẢ mọi người trong phòng
+        await Clients.Group(roomId).SendAsync("GameStarted");
     }
 
 

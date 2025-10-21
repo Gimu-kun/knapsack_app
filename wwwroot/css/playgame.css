@@ -205,3 +205,8 @@ header svg {
     animation: shake 0.5s;
     border: 2px solid #EF4444 !important; /* Red-500 */
 }
+
+.synced-flash {
+    transition: background-color 0.1s;
+    background-color: #ffc107 !important; /* Màu vàng nổi bật */
+}

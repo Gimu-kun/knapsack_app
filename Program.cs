@@ -133,7 +133,7 @@ builder.Services
 
 
 var app = builder.Build();
-app.MapHub<GameHub>("/roomHub");
+app.MapHub<GameHub>("/gameHub");
 
 // =========================================================
 // 2. CẤU HÌNH HTTP REQUEST PIPELINE

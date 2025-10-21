@@ -1,4 +1,5 @@
 @page "/play"
+@using System.Security.Claims
 @model knapsack_app.Pages.Cli.PlayGameModel
 @{
     // Thiết lập Layout cho trang
@@ -16,6 +17,7 @@
     var challengeId = Model.Challenge_id;
     var roomId = Model.RoomId;
     var teamId = Model.TeamId;
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "GuestUser";
     var teamName = Model.TeamName;
     var playerCount = Model.Players;
     var gameData = Model.InputGameData;
@@ -363,9 +365,13 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         </div>
     </div>
 @section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script>
         const API_BASE_URL = '/api/Game/AdjustScore';
+        const currentUserId = "@Model.CurrentUser?.Id";
+        const currentUsername = "@Model.CurrentUser?.Account";
+        const currentAvatar = "@Model.CurrentUser?.Avatar";
         let takenId = null;
         const knapsack = document.getElementById('knapsack-dropzone');
         const itemsContainer = document.getElementById('drag-items-container');
@@ -380,6 +386,10 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         const startGameBtn = document.getElementById('start-game-btn');
         const revealButton = document.getElementById('reveal-cell-button');
         const challengeId = '@challengeId';
+        const roomId = '@roomId';
+        const teamId = '@teamId';
+        const playerCount = @playerCount;
+        const isMultiplayer = roomId && roomId.length > 0 && roomId !== 'null'
         
         // --- KHAI BÁO CÁC BIẾN MỚI ---
         const knapsackSection = document.getElementById('knapsack-section');
@@ -398,15 +408,112 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         const SCORE_CORRECT = 500;
         const SCORE_INCORRECT = -100;
         const REVEAL_COST = 1000;
-
-        // Hàm tạo ID phòng ngẫu nhiên
-        function generateTeamId() {
-            // Tạo 5 chữ số ngẫu nhiên
-            const randomDigits = Math.floor(10000 + Math.random() * 90000); 
-            return `T-${randomDigits}`;
-        }
         
         const scoreElement = document.getElementById('current-score');
+
+        let hubConnection = null;
+
+        if (isMultiplayer) {
+            hubConnection = new signalR.HubConnectionBuilder()
+                .withUrl("/gamehub") 
+                .withAutomaticReconnect()
+                .build();
+            
+            // Bắt đầu kết nối và tham gia phòng
+            hubConnection.start()
+                .then(() => {
+                    console.log("SignalR Connected. Joining room:", roomId);
+                    // Truyền thông tin người chơi
+                    hubConnection.invoke("JoinRoom", roomId, currentUserId, currentUsername, currentAvatar)
+                        .catch(err => console.error("SignalR JoinRoom failed:", err));
+                })
+                .catch(err => console.error("SignalR Connection Error: ", err));
+
+            // ✅ BỘ LẮNG NGHE (LISTENERS) TỪ HUB
+            
+            // 1. Nhận cập nhật ô DP từ người chơi khác
+            hubConnection.on("ReceiveCellUpdate", (i, w, value, isCorrect) => {
+                const selector = `.dp-input[data-i="${i}"][data-w="${w}"]`;
+                const cellToUpdate = document.querySelector(selector);
+                const cellElement = cellToUpdate.closest(".cell-content")
+                if (cellToUpdate && cellToUpdate.value !== value.toString()) {
+                    // Cập nhật giá trị và vô hiệu hóa sự kiện input để tránh lặp vô hạn
+                    const correctSpan = document.createElement('span');
+                    correctSpan.className = 'dp-value text-green-700 font-semibold';
+                    correctSpan.textContent = value;
+                    
+                    cellElement.innerHTML = ''; 
+                    cellElement.appendChild(correctSpan);
+                    cellElement.classList.add('bg-green-50'); 
+                    cellElement.dataset.isCompleted = 'true'; 
+                    remainingInputCells--; 
+                    adjustScoreOnServer(SCORE_CORRECT);
+                    
+                    // Tiết lộ các ô *KHÔNG PHẢI INPUT* có cùng giá trị
+                    dpBoardBody.querySelectorAll('.dp-cell').forEach(otherCell => {
+                        const otherCorrectValue = parseInt(otherCell.dataset.correctValue);
+                        const isOtherInput = otherCell.dataset.isInput === 'true'; 
+                        const isOtherCompleted = otherCell.dataset.isCompleted === 'true';
+                        
+                        if (otherCorrectValue === value && !isOtherInput && !isOtherCompleted && otherCell.querySelector('.dp-hidden-mask')) {
+                            
+                            const revealedSpan = document.createElement('span');
+                            revealedSpan.className = 'dp-value text-blue-700 font-semibold';
+                            revealedSpan.textContent = otherCorrectValue;
+                            otherCell.innerHTML = '';
+                            otherCell.appendChild(revealedSpan);
+                            otherCell.classList.add('bg-blue-50');
+                            otherCell.dataset.isCompleted = 'true';
+                        }
+                    });
+                    // Kiểm tra hoàn thành trò chơi DP
+                    if (remainingInputCells <= 0) { 
+                        setTimeout(() => endGame(true, 'DPBoardCompleted'), 500); 
+                    }
+
+                    // Tùy chọn: Thêm hiệu ứng hình ảnh (nháy sáng) để báo hiệu đồng bộ
+                    cellElement.classList.add('synced-flash');
+                    setTimeout(() => {
+                        cellElement.classList.remove('synced-flash');
+                    }, 500);
+                }
+            });
+
+            // 2. Nhận cập nhật điểm số (do Server gọi Hub sau khi xử lý điểm)
+            hubConnection.on("ReceiveScoreDeduct", (i,w,scoreChange) => {
+                console.log(scoreChange)
+                const selector = `.dp-input[data-i="${i}"][data-w="${w}"]`;
+                const cellToUpdate = document.querySelector(selector);
+                const cellElement = cellToUpdate.closest(".cell-content")
+                cellElement.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+                cellElement.style.backgroundColor = '#fef2f2';
+                console.log(cellElement)
+                cellElement.classList.add('animate-shake');
+                adjustScoreOnServer(scoreChange);
+                setTimeout(() => {
+                    cellElement.classList.remove('border-red-500', 'ring-2', 'ring-red-500', 'animate-shake');
+                    cellElement.style.backgroundColor = '#fffbeb';
+                    cellElement.value = '';
+                }, 500);
+            });
+            
+
+            hubConnection.on("ReceiveFindAndRevealCell", () => {
+                findAndRevealMissedCell();
+            });
+
+            // 4. Nhận tín hiệu bắt đầu game
+            hubConnection.on("GameStarted", () => {
+                startCountdown(); 
+            });
+
+            // 5. Nhận cập nhật danh sách người chơi (nếu có)
+            /*hubConnection.on("PlayersUpdated", (players) => {
+                // Logic cập nhật bảng danh sách người chơi/điểm số trên UI
+                console.log("Players updated:", players);
+            });*/
+        }
+
         async function adjustScoreOnServer(scoreChange) {
             if (!takenId) {
                 console.error("Lỗi: Không tìm thấy Taken ID.");
@@ -591,7 +698,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     body: JSON.stringify({
                         ChallengeId: challengeId,
                         UserId: '@Model.userId', 
-                        PlayerCount: 1 
+                        PlayerCount: playerCount
                     })
                 });
                 const result = await response.json();
@@ -655,7 +762,12 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 // Tắt nút để tránh click kép và cung cấp phản hồi
                 startGameBtn.disabled = true; 
                 startGameBtn.textContent = 'Đang chuẩn bị...';
-                
+                if(isMultiplayer){
+                    hubConnection.invoke("SignalGameStarted",roomId).catch(function (err) {
+                        return console.error("Error Start: " + err.toString());
+                    })
+                    return;
+                }
                 // Bắt đầu đếm ngược
                 startCountdown();
             });
@@ -674,16 +786,19 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         }
 
         function findAndRevealMissedCell() {
+            adjustScoreOnServer(-REVEAL_COST);
             // ... (Logic tiết lộ ô giữ nguyên) ...
             
             // 1. Tìm ô input chưa hoàn thành đầu tiên để xác định giá trị mục tiêu
             const uncompletedInputCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]');
+            console.log(uncompletedInputCells);
             if (uncompletedInputCells.length === 0) {
                 checkAllCellsCompletedAndEndGame();
                 return { count: 0, value: null };
             }
 
             const cellToTarget = uncompletedInputCells[0];
+
             const correctValue = cellToTarget.getAttribute('data-correct-value');
             
             // 2. Tìm TẤT CẢ các ô (Input & Non-Input) chưa hoàn thành có giá trị tương đồng
@@ -769,8 +884,10 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
 
                 // 4. Gọi API trừ điểm và tiết lộ ô
                 try {
-                    adjustScoreOnServer(-REVEAL_COST);
-                    findAndRevealMissedCell(); 
+                    findAndRevealMissedCell();
+                    hubConnection.invoke("SendFindAndRevealCell", roomId).catch(function (err) {
+                        return console.error("Error find and reveal cell: " + err.toString());
+                    });
                 } catch (error) {
                     console.error("Lỗi kết nối API tiết lộ ô:", error);
                 }
@@ -1013,6 +1130,15 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     cellElement.dataset.isCompleted = 'true'; 
                     remainingInputCells--; 
                     adjustScoreOnServer(SCORE_CORRECT);
+                    if(isMultiplayer){
+                        const row = parseInt(cellElement.dataset.i);
+                        const col = parseInt(cellElement.dataset.w);
+                        const value = correctValue;
+                        const roomId = "@Model.RoomId";
+                        hubConnection.invoke("SendCellUpdate", roomId, row, col, value, true).catch(function (err) {
+                            return console.error("Error async cell: " + err.toString());
+                        });
+                    }
                     // Tiết lộ các ô *KHÔNG PHẢI INPUT* có cùng giá trị
                     dpBoardBody.querySelectorAll('.dp-cell').forEach(otherCell => {
                         const otherCorrectValue = parseInt(otherCell.dataset.correctValue);
@@ -1024,8 +1150,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                             const revealedSpan = document.createElement('span');
                             revealedSpan.className = 'dp-value text-blue-700 font-semibold';
                             revealedSpan.textContent = otherCorrectValue;
-  
-                            
                             otherCell.innerHTML = '';
                             otherCell.appendChild(revealedSpan);
                             otherCell.classList.add('bg-blue-50');
@@ -1039,13 +1163,19 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
 
                 } else {
                     // --- Giá trị SAI ---
-                    
+                    if(isMultiplayer){
+                        const row = parseInt(cellElement.dataset.i);
+                        const col = parseInt(cellElement.dataset.w);
+                        const roomId = "@Model.RoomId";
+                        hubConnection.invoke("SendScoreDeduct", roomId,row,col, SCORE_INCORRECT).catch(function (err) {
+                            return console.error("Error Adjust score: " + err.toString());
+                        });
+                    }
                     inputElement.classList.add('border-red-500', 'ring-2', 'ring-red-500');
                     inputElement.style.backgroundColor = '#fef2f2';
                     
                     inputElement.classList.add('animate-shake');
                     adjustScoreOnServer(SCORE_INCORRECT);
-                    
                     setTimeout(() => {
                         inputElement.classList.remove('border-red-500', 'ring-2', 'ring-red-500', 'animate-shake');
                         inputElement.style.backgroundColor = '#fffbeb';
