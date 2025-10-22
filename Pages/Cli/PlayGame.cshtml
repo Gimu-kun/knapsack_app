@@ -1,5 +1,6 @@
 @page "/play"
 @using System.Security.Claims
+@using Newtonsoft.Json
 @model knapsack_app.Pages.Cli.PlayGameModel
 @{
     // Thiết lập Layout cho trang
@@ -368,6 +369,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/6.0.1/signalr.js"></script> 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script>
+        let DRAGGED_ITEM_ID = null;
         const API_BASE_URL = '/api/Game/AdjustScore';
         const currentUserId = "@Model.CurrentUser?.Id";
         const currentUsername = "@Model.CurrentUser?.Account";
@@ -388,7 +390,9 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         const challengeId = '@challengeId';
         const roomId = '@roomId';
         const teamId = '@teamId';
+        const teamName = '@teamName';
         const playerCount = @playerCount;
+        console.log("playerCount:", playerCount);
         const isMultiplayer = roomId && roomId.length > 0 && roomId !== 'null'
         
         // --- KHAI BÁO CÁC BIẾN MỚI ---
@@ -396,6 +400,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         const itemsSection = document.getElementById('items-section');
         const OPTIMAL_VALUE = @optimalValue; // GIÁ TRỊ TỐI ƯU ĐƯỢC LẤY TỪ RAZOR
         const MAX_DURATION_SECONDS = @maxDurationDisplay;
+        const ALL_ITEMS_DATA = @Html.Raw(JsonConvert.SerializeObject(Model.Items));
         const finalResultsModal = document.getElementById('final-results-modal');
         const finalScoreDisplay = document.getElementById('final-score-display');
         const timeUsedDisplay = document.getElementById('time-used-display');
@@ -428,15 +433,17 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                         .catch(err => console.error("SignalR JoinRoom failed:", err));
                 })
                 .catch(err => console.error("SignalR Connection Error: ", err));
-
-            // ✅ BỘ LẮNG NGHE (LISTENERS) TỪ HUB
             
             // 1. Nhận cập nhật ô DP từ người chơi khác
             hubConnection.on("ReceiveCellUpdate", (i, w, value, isCorrect) => {
                 const selector = `.dp-input[data-i="${i}"][data-w="${w}"]`;
                 const cellToUpdate = document.querySelector(selector);
                 const cellElement = cellToUpdate.closest(".cell-content")
-                if (cellToUpdate && cellToUpdate.value !== value.toString()) {
+                const correctValue = parseInt(value);
+                console.log(cellElement);
+                const isCompleted = cellElement.dataset.isCompleted === 'true';
+                if (isCompleted) return; 
+                if (cellToUpdate) {
                     // Cập nhật giá trị và vô hiệu hóa sự kiện input để tránh lặp vô hạn
                     const correctSpan = document.createElement('span');
                     correctSpan.className = 'dp-value text-green-700 font-semibold';
@@ -445,7 +452,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     cellElement.innerHTML = ''; 
                     cellElement.appendChild(correctSpan);
                     cellElement.classList.add('bg-green-50'); 
-                    cellElement.dataset.isCompleted = 'true'; 
+                    cellElement.parentNode.dataset.isCompleted = 'true'; 
                     remainingInputCells--; 
                     adjustScoreOnServer(SCORE_CORRECT);
                     
@@ -507,11 +514,20 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 startCountdown(); 
             });
 
-            // 5. Nhận cập nhật danh sách người chơi (nếu có)
-            /*hubConnection.on("PlayersUpdated", (players) => {
-                // Logic cập nhật bảng danh sách người chơi/điểm số trên UI
-                console.log("Players updated:", players);
-            });*/
+            hubConnection.on("ReceiveKnapsackItemAdded", (itemId) => { 
+                handleDropKnapsack(itemId);
+            });
+
+            // 4. Nhận đồng bộ XÓA vật phẩm
+            hubConnection.on("ReceiveKnapsackItemRemoved", (Element,itemId,itemName,itemValue,itemWeight) => { 
+                removeFromKnapsack(Element, itemId, itemName, itemValue, itemWeight);
+            });
+            
+            hubConnection.on("ReceiveEndGameKnapsack", (finalWeight, finalValue, isOptimal) => {
+                if (gameActive) { 
+                    endGameKnapsack(finalWeight, finalValue, isOptimal);
+                }
+            });
         }
 
         async function adjustScoreOnServer(scoreChange) {
@@ -550,6 +566,27 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             }
         }
 
+        // Hàm tìm dữ liệu vật phẩm dựa trên ID (cần cho sync)
+        function findItemDataById(itemId) {
+            // 1. Tìm vật phẩm
+            const item = ALL_ITEMS_DATA.find(item => item.id.toString() === itemId.toString());
+
+            if (!item) {
+                console.error(`Không tìm thấy dữ liệu gốc cho item ID: ${itemId}`);
+                return null;
+            }
+
+            // 2. Đảm bảo value và weight là số nguyên (Giúp tránh lỗi NaN)
+            const parsedItem = {
+                id: item.id,
+                name: item.name,
+                value: parseInt(item.value) || 0,
+                weight: parseInt(item.weight) || 0
+            };
+
+            return parsedItem;
+        }
+
         function showScoreFeedback(scoreChange) {
             // Đây là ví dụ về hiệu ứng nổi (floating effect)
             const feedback = document.createElement('div');
@@ -580,6 +617,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         // KHAI BÁO BIẾN CHO TIMER VÀ LOGIC POLLING MỚI
         // ===============================================
         let timerInterval;
+        let usedTimeSeconds = 0;
         const timerDisplay = document.getElementById('game-timer');
         const timerContainer = document.getElementById('timer-container');
         
@@ -647,8 +685,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     
                     const result = await response.json();
                     let timeRemainingSeconds = result.timeRemaining;
-                    let isTimeUp = result.isTimeUp; // Lấy trạng thái hết giờ từ Server
-                    console.log("Thời gian",timeRemainingSeconds)   
+                    let isTimeUp = result.isTimeUp; // Lấy trạng thái hết giờ từ Server 
                     if (isTimeUp) {
                         clearInterval(timerInterval);
                         timerDisplay.textContent = formatTime(0);
@@ -657,6 +694,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     }
 
                     // Cập nhật hiển thị bằng giá trị từ Server
+                    usedTimeSeconds = MAX_DURATION_SECONDS - timeRemainingSeconds;
                     timerDisplay.textContent = formatTime(timeRemainingSeconds);
                     // Cập nhật giao diện cảnh báo
                     if (timeRemainingSeconds <= 60 && timeRemainingSeconds > 0) {
@@ -698,7 +736,9 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     body: JSON.stringify({
                         ChallengeId: challengeId,
                         UserId: '@Model.userId', 
-                        PlayerCount: playerCount
+                        PlayerCount: playerCount,
+                        TeamName: teamName,
+                        TeamId: teamId
                     })
                 });
                 const result = await response.json();
@@ -768,8 +808,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     })
                     return;
                 }
-                // Bắt đầu đếm ngược
-                startCountdown();
             });
         }
 
@@ -786,9 +824,9 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         }
 
         function findAndRevealMissedCell() {
+            console.log("Bắt đầu tiết lộ ô DP bị bỏ sót...");
+            // Giảm điểm người chơi
             adjustScoreOnServer(-REVEAL_COST);
-            // ... (Logic tiết lộ ô giữ nguyên) ...
-            
             // 1. Tìm ô input chưa hoàn thành đầu tiên để xác định giá trị mục tiêu
             const uncompletedInputCells = document.querySelectorAll('.dp-cell[data-is-input="true"][data-is-completed="false"]');
             console.log(uncompletedInputCells);
@@ -884,10 +922,13 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
 
                 // 4. Gọi API trừ điểm và tiết lộ ô
                 try {
-                    findAndRevealMissedCell();
-                    hubConnection.invoke("SendFindAndRevealCell", roomId).catch(function (err) {
-                        return console.error("Error find and reveal cell: " + err.toString());
-                    });
+                    if(isMultiplayer){
+                        hubConnection.invoke("SendFindAndRevealCell", roomId).catch(function (err) {
+                            return console.error("Error find and reveal cell: " + err.toString());
+                        });
+                    }else{
+                        findAndRevealMissedCell();
+                    }
                 } catch (error) {
                     console.error("Lỗi kết nối API tiết lộ ô:", error);
                 }
@@ -899,9 +940,15 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         
         // HÀM KIỂM TRA ĐẠT TỐI ƯU
         function checkOptimalValueAndEndGame() {
-            // Tự động kết thúc nếu tổng giá trị đạt giá trị tối ưu
-            if (totalValue === OPTIMAL_VALUE) {
-                endGameKnapsack(totalWeight, totalValue, true);
+            if (totalValue === OPTIMAL_VALUE && totalWeight <= maxCapacity) {
+                // GỌI HUB ĐỂ KẾT THÚC GAME CHO CẢ PHÒNG
+                if(isMultiplayer && hubConnection) {
+                    hubConnection.invoke("SendEndGameKnapsack", roomId, totalWeight, totalValue, true).catch(err => {
+                        console.error("Error sending EndGameKnapsack:", err);
+                    });
+                }else{
+                    endGameKnapsack(totalWeight, totalValue, true);
+                }
                 return true;
             }
             return false;
@@ -922,7 +969,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 knapsack.classList.add('bg-white', 'border-gray-400');
             }
             
-            checkOptimalValueAndEndGame(); // KIỂM TRA TỐI ƯU SAU MỖI LẦN CẬP NHẬT
+            checkOptimalValueAndEndGame();
         }
 
         function setupDragItems() {
@@ -931,22 +978,24 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 item.dataset.hasEvents = true;
 
                 item.addEventListener('dragstart', (e) => {
-                    // KHÔNG CẦN KIỂM TRA knapsackEnabled NỮA
                     if (!item.getAttribute('draggable') || item.getAttribute('draggable') === 'false' || !gameActive) { 
                         e.preventDefault();
                         return;
                     }
-                    e.dataTransfer.setData('text/plain', JSON.stringify({
-                        id: item.dataset.id,
-                        name: item.dataset.name, 
-                        value: parseInt(item.dataset.value),
-                        weight: parseInt(item.dataset.weight),
-                    }));
+                    
+                    // ✅ THAY THẾ dataTransfer: Lưu ID vào biến toàn cục
+                    DRAGGED_ITEM_ID = item.dataset.id;
+                    
+                    // Vẫn set minimal dataTransfer để kích hoạt cơ chế kéo thả của trình duyệt
+                    e.dataTransfer.setData('text/plain', 'data'); 
+                    
                     item.style.opacity = '0.5';
                     item.classList.add('dragging');
                 });
 
                 item.addEventListener('dragend', (e) => { 
+                    // ✅ THAY THẾ dataTransfer: Xóa ID khỏi biến toàn cục
+                    DRAGGED_ITEM_ID = null;
                     item.style.opacity = '1';
                     item.classList.remove('dragging');
                 });
@@ -956,86 +1005,113 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         setupDragItems();
         knapsack.addEventListener('dragover', (e) => {
             e.preventDefault();
-            if (!gameActive) return; // KHÔNG CẦN KIỂM TRA knapsackEnabled
+            if (!gameActive) return; 
             knapsack.classList.add('border-blue-500', 'bg-blue-50', 'border-dashed');
         });
         knapsack.addEventListener('dragleave', (e) => {
             knapsack.classList.remove('border-blue-500', 'bg-blue-50', 'border-dashed');
         });
+        knapsack.addEventListener('drop', ()=>{
+            if(isMultiplayer){
+                hubConnection.invoke("SendKnapsackItemAdded", roomId, DRAGGED_ITEM_ID).catch(err => {
+                    console.error("Error sending KnapsackItemAdded: " + err.toString());
+                });
+            }else{
+                handleDropKnapsack(DRAGGED_ITEM_ID);
+            }
+        });
+
+        // Hàm tạo nút xóa và gắn sự kiện (Dùng chung cho cả thêm vật phẩm tự thao tác và đồng bộ)
+        function createRemoveButton(cloneElement, itemId, itemName, itemValue, itemWeight) {
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<span class="material-symbols-outlined text-sm">close</span>';
+            removeBtn.className = 'absolute top-0 right-0 p-1 text-red-600 hover:text-red-800 bg-white rounded-full leading-none shadow-md';
+            removeBtn.onclick = (event) => {
+                event.stopPropagation();
+                // 3. GỌI HUB ĐỂ ĐỒNG BỘ (Chỉ khi người chơi tự thao tác)
+                if (isMultiplayer && hubConnection) {
+                    hubConnection.invoke("SendKnapsackItemRemoved", roomId, cloneElement, itemId, itemName, itemValue, itemWeight).catch(err => {
+                        console.error("Error sending KnapsackItemRemoved: " + err.toString());
+                    });
+                }else{
+                    removeFromKnapsack(cloneElement, itemId, itemName, itemValue, itemWeight);
+                }
+            };
+            cloneElement.appendChild(removeBtn);
+        }
         
-        function handleDropKnapsack(e) {
-            e.preventDefault();
-            if (!gameActive) return; // KHÔNG CẦN KIỂM TRA knapsackEnabled
+        function handleDropKnapsack(itemId) {
+            if (!gameActive || !itemId) {
+                knapsack.classList.remove('border-blue-500', 'bg-blue-50', 'border-dashed');
+                return; 
+            }
+
             knapsack.classList.remove('border-blue-500', 'bg-blue-50', 'border-dashed');
 
-            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-            const draggedItem = itemsContainer.querySelector(`.drag-item[data-id="${data.id}"]`);
-            if (draggedItem && draggedItem.parentNode === itemsContainer) {
-                
-                // KIỂM TRA SỨC CHỨA
-                if (totalWeight + data.weight > maxCapacity) {
-                    alert(`⚠️ Không thể thêm ${data.weight} kg. Túi chỉ còn trống ${maxCapacity - totalWeight} kg.`);
-                    return; 
-                }
-                
-                // Nếu đã đạt tối ưu và cố gắng thêm vật phẩm (có thể vượt quá maxCapacity), không cho phép
-                 if (totalValue === OPTIMAL_VALUE && (totalWeight + data.weight > maxCapacity || data.value > 0)) {
-                    // Nếu đã đạt tối ưu, chỉ cho phép kéo thả nếu vật phẩm mới có W=0, V=0.
-                    // Nhưng để đơn giản, ta chỉ cần kiểm tra sau khi thêm. Nếu vượt quá thì revert.
-                 }
-
-                const clone = draggedItem.cloneNode(true);
-                clone.setAttribute('draggable', 'false');
-                clone.classList.remove('hover:ring-2', 'hover:ring-blue-300', 'cursor-grab');
-                clone.classList.add('knapsack-item', 'relative', 'bg-blue-100', 'shadow-md', 'ring-2', 'ring-blue-400');
-                
-                knapsack.appendChild(clone);
-
-                totalWeight += data.weight;
-                totalValue += data.value;
-                updateTotals();
-
-                knapsack.querySelector('.placeholder-content')?.remove();
-                draggedItem.remove(); // XÓA VẬT PHẨM KHỎI KHUNG CHỌN
-
-                const removeBtn = document.createElement('button');
-                removeBtn.innerHTML = '<span class="material-symbols-outlined text-sm">close</span>';
-                removeBtn.className = 'absolute top-0 right-0 p-1 text-red-600 hover:text-red-800 bg-white rounded-full leading-none shadow-md';
-                removeBtn.onclick = (event) => {
-                    event.stopPropagation();
-                    removeFromKnapsack(clone, data); 
-                };
-                clone.appendChild(removeBtn);
+            // 2. Tìm lại phần tử gốc để lấy dữ liệu
+            const draggedItem = itemsContainer.querySelector(`.drag-item[data-id="${itemId}"]`);
+            
+            // Kiểm tra xem vật phẩm có tồn tại và còn trong khung chọn không
+            if (!draggedItem || draggedItem.parentNode !== itemsContainer) {
+                console.warn(`Vật phẩm ID ${itemId} không còn khả dụng để kéo.`);
+                return; 
             }
+            
+            // Trích xuất dữ liệu từ data-attributes
+            const data = {
+                id: itemId,
+                name: draggedItem.dataset.name,
+                value: parseInt(draggedItem.dataset.value),
+                weight: parseInt(draggedItem.dataset.weight),
+            };
+            
+            // 3. Logic Knapsack
+            if (totalWeight + data.weight > maxCapacity) {
+                alert(`⚠️ Không thể thêm ${data.weight} kg. Túi chỉ còn trống ${maxCapacity - totalWeight} kg.`);
+                return; 
+            }
+                
+            // 4. Cập nhật UI
+            const clone = draggedItem.cloneNode(true);
+            clone.setAttribute('draggable', 'false');
+            clone.setAttribute('data-rm-id', itemId);
+            clone.classList.remove('hover:ring-2', 'hover:ring-blue-300', 'cursor-grab');
+            clone.classList.add('knapsack-item', 'relative', 'bg-blue-100', 'shadow-md', 'ring-2', 'ring-blue-400');
+            console.log("Thêm vật phẩm vào knapsack:", clone);
+            knapsack.appendChild(clone);
+
+            knapsack.querySelector('.placeholder-content')?.remove();
+            draggedItem.remove(); 
+
+            totalWeight += data.weight;
+            totalValue += data.value;
+            updateTotals();
+
+            createRemoveButton(clone, itemId, draggedItem.dataset.name, parseInt(draggedItem.dataset.value), parseInt(draggedItem.dataset.weight)); 
         }
 
-        knapsack.addEventListener('drop', handleDropKnapsack);
-        // Gắn event listener
-
-        function removeFromKnapsack(knapsackItemElement, itemData) { 
-            knapsackItemElement.remove();
+        function removeFromKnapsack(knapsackItemElement, itemId, itemName, itemValue, itemWeight) { 
+            // 1. Cập nhật UI
+            const el = document.querySelector(`[data-rm-id="${itemId}"]`);
+            el.remove();
 
             // TẠO LẠI VẬT PHẨM TRONG KHUNG CHỌN
             const recreatedItem = document.createElement('div');
             recreatedItem.className = 'drag-item bg-white p-3 rounded-lg shadow border border-gray-200 hover:ring-2 hover:ring-blue-300 transition duration-150 cursor-grab';
             recreatedItem.setAttribute('draggable', 'true');
-            recreatedItem.setAttribute('data-id', itemData.id);
-            recreatedItem.setAttribute('data-value', itemData.value);
-            recreatedItem.setAttribute('data-weight', itemData.weight);
-            recreatedItem.setAttribute('data-name', itemData.name); 
+            recreatedItem.setAttribute('data-id', itemId);
+            recreatedItem.setAttribute('data-value', itemValue);
+            recreatedItem.setAttribute('data-weight', itemWeight);
+            recreatedItem.setAttribute('data-name', itemName); 
             recreatedItem.innerHTML = `
-                <p class="text-sm font-bold text-gray-900">${itemData.name}</p> 
+                <p class="text-sm font-bold text-gray-900">${itemName}</p> 
                 <div class="flex justify-between text-xs mt-1">
-                    <p class="text-green-600">V: <strong>${itemData.value}</strong></p>
-                    <p class="text-red-600">W: <strong>${itemData.weight}</strong> kg</p>
+                    <p class="text-green-600">V: <strong>${itemValue}</strong></p>
+                    <p class="text-red-600">W: <strong>${itemWeight}</strong> kg</p>
                 </div>`;
-            itemsContainer.appendChild(recreatedItem);
-            setupDragItems(); // Thiết lập lại event listener cho vật phẩm mới
+            document.querySelector("#drag-items-container").appendChild(recreatedItem);
+            setupDragItems(); 
 
-            totalWeight -= itemData.weight;
-            totalValue -= itemData.value;
-            updateTotals();
-            
             if (knapsack.children.length === 0) {
                 const placeholder = document.createElement('div');
                 placeholder.className = 'w-full text-center text-gray-500 p-8 placeholder-content';
@@ -1044,8 +1120,12 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     <p class="mt-2">Kéo vật phẩm vào đây</p>`;
                 knapsack.appendChild(placeholder);
             }
-        }
 
+            // 2. Cập nhật tổng
+            totalWeight -= itemWeight;
+            totalValue -= itemValue;
+            updateTotals();
+        }
 
         // 3. Logic Hoàn Thành Trò Chơi Knapsack TỰ ĐỘNG
         function endGameKnapsack(finalWeight, finalValue, isOptimal) {
@@ -1055,11 +1135,16 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             console.log(`Kết quả Knapsack: W=${finalWeight}, V=${finalValue}`);
             
             knapsack.removeEventListener('drop', handleDropKnapsack); 
-            
+            try {
+                fetch(`/api/Game/End/${takenId}/${usedTimeSeconds}`, {
+                    method: 'POST'
+                });
+            } catch (error) {
+                console.error("Lỗi khi khi cập nhật số liệu kết thúc game:", error);
+            }
             if (isOptimal) {
                 showFinalResults();
                 startConfetti();
-                alert(`🏆 CHÚC MỪNG! Bạn đã đạt được Giá Trị Tối Ưu ${finalValue} (Trọng lượng: ${finalWeight} / ${maxCapacity}). TRÒ CHƠI KẾT THÚC!`);
             } else {
                 alert(`Game Over. Tổng Giá Trị: ${finalValue}.`);
             }
@@ -1130,23 +1215,14 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     cellElement.dataset.isCompleted = 'true'; 
                     remainingInputCells--; 
                     adjustScoreOnServer(SCORE_CORRECT);
-                    if(isMultiplayer){
-                        const row = parseInt(cellElement.dataset.i);
-                        const col = parseInt(cellElement.dataset.w);
-                        const value = correctValue;
-                        const roomId = "@Model.RoomId";
-                        hubConnection.invoke("SendCellUpdate", roomId, row, col, value, true).catch(function (err) {
-                            return console.error("Error async cell: " + err.toString());
-                        });
-                    }
                     // Tiết lộ các ô *KHÔNG PHẢI INPUT* có cùng giá trị
                     dpBoardBody.querySelectorAll('.dp-cell').forEach(otherCell => {
                         const otherCorrectValue = parseInt(otherCell.dataset.correctValue);
                         const isOtherInput = otherCell.dataset.isInput === 'true'; 
                         const isOtherCompleted = otherCell.dataset.isCompleted === 'true';
-                        
-                        if (otherCorrectValue === correctValue && !isOtherInput && !isOtherCompleted && otherCell.querySelector('.dp-hidden-mask')) {
                             
+                        if (otherCorrectValue === correctValue && !isOtherInput && !isOtherCompleted && otherCell.querySelector('.dp-hidden-mask')) {
+                                
                             const revealedSpan = document.createElement('span');
                             revealedSpan.className = 'dp-value text-blue-700 font-semibold';
                             revealedSpan.textContent = otherCorrectValue;
@@ -1156,11 +1232,19 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                             otherCell.dataset.isCompleted = 'true';
                         }
                     });
+                    if(isMultiplayer){
+                        const row = parseInt(cellElement.dataset.i);
+                        const col = parseInt(cellElement.dataset.w);
+                        const value = correctValue;
+                        const roomId = "@Model.RoomId";
+                        hubConnection.invoke("SendCellUpdate", roomId, row, col, value, true).catch(function (err) {
+                            return console.error("Error async cell: " + err.toString());
+                        });
+                    }
                     // Kiểm tra hoàn thành trò chơi DP
                     if (remainingInputCells <= 0) { 
                         setTimeout(() => endGame(true, 'DPBoardCompleted'), 500); 
                     }
-
                 } else {
                     // --- Giá trị SAI ---
                     if(isMultiplayer){

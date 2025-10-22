@@ -41,7 +41,8 @@ namespace knapsack_app.Pages.Cli
         public string? TeamId { get; set; }
         [BindProperty(SupportsGet = true)]
         public string? TeamName { get; set; }
-        public int Players { get; set; } = 1;
+        [BindProperty(SupportsGet = true)]
+        public int Players { get; set; }
         public GameSessionStarted SessionData { get; set; } = new GameSessionStarted();
         public GameData InputGameData { get; set; } = new GameData();
         public List<KnapsackItem> Items { get; set; } = new List<KnapsackItem>();

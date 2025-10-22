@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using Google.Protobuf.WellKnownTypes;
 
 // Định nghĩa trạng thái Player (giữ nguyên hoặc thêm Score)
 public class Player
@@ -156,7 +157,7 @@ public class GameHub : Hub
     
     public async Task SendFindAndRevealCell(string roomId)
     {
-        await Clients.OthersInGroup(roomId).SendAsync("ReceiveFindAndRevealCell");
+        await Clients.Group(roomId).SendAsync("ReceiveFindAndRevealCell");
     }
 
     // ✅ PHƯƠNG THỨC MỚI: Đồng bộ trạng thái bắt đầu trò chơi (Chỉ Host mới gọi)
@@ -202,12 +203,27 @@ public class GameHub : Hub
                 break;
             }
         }
-        
+
         if (roomIdToRemove != null)
         {
             Rooms.TryRemove(roomIdToRemove, out _);
         }
 
         await base.OnDisconnectedAsync(exception);
+    }
+
+    public async Task SendKnapsackItemAdded(string roomId, string itemId)
+    {
+        await Clients.Group(roomId).SendAsync("ReceiveKnapsackItemAdded", itemId);
+    }
+
+    public async Task SendKnapsackItemRemoved(string roomId, Any Element, string itemId, string itemName, int itemValue, int itemWeight)
+    {
+        await Clients.Group(roomId).SendAsync("ReceiveKnapsackItemRemoved", Element, itemId, itemName, itemValue, itemWeight);
+    }
+    
+    public async Task SendEndGameKnapsack(string roomId,int totalWeight, int totalValue, bool isFinal)
+    {
+        await Clients.Group(roomId).SendAsync("ReceiveEndGameKnapsack", totalWeight, totalValue, isFinal);
     }
 }

@@ -193,7 +193,6 @@
 
         // 5. Lắng nghe lệnh Bắt đầu Trò chơi
         connection.on("GameStarted", function (roomId, difficulty, url) {
-            alert(`Trò chơi bắt đầu với độ khó: ${getDifficultyText(difficulty)}`);
             console.log("chuyển trang tới",url);
             window.location.href = `${url}`;
         });
@@ -326,6 +325,11 @@
 
         // --- Xử lý nút bấm Bắt đầu ---
         $('#btn-start-game').on('click',async function(e) {
+            if($('#team-name-input').val()==""){
+                alert("Vui lòng nhập tên đội trước khi bắt đầu trò chơi.");
+                return;
+            }
+            
             const diffInt = $('#difficulty-select').val();
             const apiEndpoint = `/api/Challenge/random?difficulty=${getDifficultyInt(diffInt)}`;
             e.preventDefault();

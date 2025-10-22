@@ -74,12 +74,9 @@ namespace knapsack_app.Services
                 IsTimeUp = isTimeUp
             };
         }
-        
+
         public async Task<AdjustScoreResponse> AdjustTakenScore(string takenId, int scoreChange)
         {
-
-            Console.WriteLine("Test id-------------------" + takenId);
-            Console.WriteLine("Test score-------------------" + scoreChange);
             // 1. Tìm bản ghi Taken (takenScore phải được load để cập nhật)
             var taken = await _context.Taken
                 .FirstOrDefaultAsync(t => t.Id == takenId);
@@ -88,9 +85,10 @@ namespace knapsack_app.Services
 
             if (taken == null)
             {
-                return new AdjustScoreResponse { 
-                    Success = false, 
-                    Message = $"Phiên chơi (Taken ID: {takenId}) không tồn tại." 
+                return new AdjustScoreResponse
+                {
+                    Success = false,
+                    Message = $"Phiên chơi (Taken ID: {takenId}) không tồn tại."
                 };
             }
 
@@ -108,10 +106,10 @@ namespace knapsack_app.Services
             {
                 taken.TakenScore = newScore;
             }
-            
+
             // 3. Lưu thay đổi vào CSDL
             // EF Core sẽ tự động tạo lệnh UPDATE và thực thi
-            await _context.SaveChangesAsync(); 
+            await _context.SaveChangesAsync();
 
             // 4. Trả về kết quả
             return new AdjustScoreResponse
@@ -120,6 +118,33 @@ namespace knapsack_app.Services
                 NewScore = taken.TakenScore,
                 IsZeroScore = isZeroScore,
                 Message = isZeroScore ? "Điểm đã bị trừ về 0." : "Điểm đã được điều chỉnh thành công."
+            };
+        }
+        
+         public async Task<AdjustScoreResponse> EndGame(string TakenId, int takenTimeSeconds)
+        {
+            // 1. Tìm bản ghi Taken (takenScore phải được load để cập nhật)
+            var taken = await _context.Taken
+                .FirstOrDefaultAsync(t => t.Id == TakenId);
+
+            if (taken == null)
+            {
+                return new AdjustScoreResponse
+                {
+                    Success = false,
+                    Message = $"Phiên chơi (Taken ID: {TakenId}) không tồn tại."
+                };
+            };
+
+            taken.TakenDuration = takenTimeSeconds;
+            _context.Taken.Update(taken);
+            await _context.SaveChangesAsync();
+
+            // 4. Trả về kết quả
+            return new AdjustScoreResponse
+            {
+                Success = true,
+                Message = "Cập nhật kết quả thành công."
             };
         }
     }

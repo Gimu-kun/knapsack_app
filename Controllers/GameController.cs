@@ -105,7 +105,7 @@ namespace knapsack_app.Controllers
                 return StatusCode(500, new { message = $"Lỗi hệ thống khi lấy trạng thái game: {ex.Message}" });
             }
         }
-        
+
         [HttpPost("AdjustScore")]
         public async Task<IActionResult> AdjustScore([FromBody] AdjustScoreRequest request)
         {
@@ -126,7 +126,7 @@ namespace knapsack_app.Controllers
                     // Trả về 404 nếu không tìm thấy TakenId
                     return NotFound(new { message = response.Message });
                 }
-                
+
                 // 4. Trả về kết quả thành công (bao gồm NewScore và IsZeroScore)
                 return Ok(response);
             }
@@ -134,6 +134,40 @@ namespace knapsack_app.Controllers
             {
                 // Log lỗi và trả về lỗi Server
                 return StatusCode(500, new { message = $"Lỗi hệ thống khi điều chỉnh điểm: {ex.Message}" });
+            }
+        }
+        
+        [HttpPost("End/{TakenId}/{TakenTimeSeconds}")]
+        public async Task<IActionResult> EndGame(string TakenId,int TakenTimeSeconds)
+        {
+
+            Console.WriteLine("API EndGame được gọi với TakenId: " + TakenId);
+            Console.WriteLine("API EndGame được gọi với TakenTimeSeconds: " + TakenTimeSeconds);
+            // 1. Kiểm tra dữ liệu đầu vào cơ bản
+            if (string.IsNullOrEmpty(TakenId))
+            {
+                return BadRequest(new { message = "Taken ID không được để trống." });
+            }
+
+            try
+            {
+                // 2. Gọi Service để thực hiện logic điều chỉnh điểm
+                var response = await _gameService.EndGame(TakenId,TakenTimeSeconds);
+
+                // 3. Xử lý phản hồi từ Service
+                if (!response.Success)
+                {
+                    // Trả về 404 nếu không tìm thấy TakenId
+                    return NotFound(new { message = response.Message });
+                }
+                
+                // 4. Trả về kết quả thành công (bao gồm NewScore và IsZeroScore)
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                // Log lỗi và trả về lỗi Server
+                return StatusCode(500, new { message = $"Lỗi hệ thống kết thúc game: {ex.Message}" });
             }
         }
     }
