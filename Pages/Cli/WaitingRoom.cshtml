@@ -78,9 +78,8 @@
 
     let currentDifficulty = 'easy';
     let currentPlayers = [];
-    const roomId = "@Model.Id"; // Lấy ID phòng trực tiếp từ Model
+    const roomId = "@Model.Id";
 
-    // Hàm chuyển đổi giá trị độ khó sang chuỗi hiển thị
     function getDifficultyText(value) {
         switch (value) {
             case 'easy': return 'DỄ';
@@ -90,7 +89,6 @@
         }
     }
 
-    // Hàm chuyển đổi giá trị độ khó sang int
     function getDifficultyInt(value) {
         console.log(value)
         switch (value) {
@@ -101,7 +99,6 @@
         }
     }
     
-    // Hàm cập nhật màu cho hiển thị độ khó
     function getDifficultyColorClass(value) {
         switch (value) {
             case 'easy': return 'text-green-600';
@@ -131,80 +128,58 @@
 
         let isHost = false;
         
-        // --- Xử lý sự kiện từ Server ---
-
-        // 2. Lắng nghe cập nhật danh sách người chơi
         connection.on("PlayersUpdated", function (players) {
             console.log("Danh sách người chơi cập nhật:", players);
             currentPlayers = players;
             updatePlayerList(players);
         });
         
-        // 3. Lắng nghe cập nhật Độ khó
         connection.on("DifficultyUpdated", function (difficulty) {
             currentDifficulty = difficulty;
             const diffText = getDifficultyText(difficulty);
             const diffColor = getDifficultyColorClass(difficulty);
             
-            // Cập nhật hiển thị độ khó cho tất cả người chơi
             $('#difficulty-display').text(diffText).removeClass('text-green-600 text-yellow-600 text-red-600').addClass(diffColor);
             
-            // Cập nhật thông báo chờ cho Member
             if (!isHost) {
                 $('#member-difficulty-message p').text(`Độ khó đã được đặt là: ${diffText}`);
             } else {
-                // Đồng bộ hóa select với độ khó hiện tại
                 $('#difficulty-select').val(currentDifficulty);
             }
         });
 
 
-        // 4. Lắng nghe thông báo về Vai trò (Host/Member)
         connection.on("RoleAssigned", function (isHostRole) {
         isHost = isHostRole;
         
-        // Cập nhật hiển thị nút Bắt đầu và control độ khó
         if (isHost) {
             $('#btn-start-game').removeClass('hidden');
             $('#waiting-for-host-message').addClass('hidden');
             
-            // HOST CONTROL
             $('#host-difficulty-control').removeClass('hidden');
             $('#host-team-name').removeClass('hidden');
             $('#member-difficulty-message').addClass('hidden');
             
-            // ✅ XÓA LỆNH GỌI LẶP LẠI JoinRoom Ở ĐÂY!
-            // VÌ JoinRoom ban đầu hoặc PlayersUpdated đã cung cấp đủ thông tin.
-            
-            // Đồng bộ hóa select với độ khó hiện tại (nếu Host mới tham gia)
             $('#difficulty-select').val(currentDifficulty);
 
         } else {
-            // ... (phần Member View giữ nguyên)
             $('#btn-start-game').addClass('hidden');
             $('#waiting-for-host-message').removeClass('hidden');
-            
-            // MEMBER VIEW
             $('#host-difficulty-control').addClass('hidden');
             $('#host-team-name').addClass('hidden');
             $('#member-difficulty-message').removeClass('hidden');
         }
     });
 
-        // 5. Lắng nghe lệnh Bắt đầu Trò chơi
         connection.on("GameStarted", function (roomId, difficulty, url) {
             console.log("chuyển trang tới",url);
             window.location.href = `${url}`;
         });
         
-        // ✅ 6. Lắng nghe lệnh Bị Kick
         connection.on("KickedFromRoom", function () {
             alert("Bạn đã bị Chủ phòng kick ra khỏi phòng. Bạn sẽ được chuyển hướng.");
-            // Chuyển hướng người chơi
             window.location.href = "/selection"; 
         });
-        
-        // --- Hàm giao diện ---
 
         function updatePlayerList(players) {
             const container = $('#player-list-container'); 
@@ -220,7 +195,7 @@
                     : '';
 
                 let kickButton = '';
-                if (isHost && !isMe) { // Chỉ hiển thị nút Kick nếu là Host VÀ không phải là chính mình
+                if (isHost && !isMe) { 
                     kickButton = `
                         <button 
                             data-user-id="${player.userId}"
@@ -235,10 +210,8 @@
 
                 let avatarContent;
                 if (player.avatar && player.avatar.trim() !== "") {
-                    // Nếu có Avatar, hiển thị ảnh
                     avatarContent = `<img src="${player.avatar}" alt="${player.username}" class="w-full h-full object-cover rounded-full" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'material-symbols-outlined text-gray-500 text-3xl\\'>person</span>';" />`;
                 } else {
-                    // Nếu không có Avatar, hiển thị chữ cái đầu
                     avatarContent = `
                         <div class="h-full w-full rounded-full flex items-center justify-center text-gray-700 font-extrabold text-2xl">
                             ${player.username.substring(0, 1).toUpperCase()}
@@ -263,7 +236,6 @@
                 container.append(playerHtml);
             });
             
-            // Thêm các ô trống nếu chưa đủ 4 người
             for (let i = players.length; i < 4; i++) {
                  const emptySlotHtml = `
                     <div class="p-5 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50 flex flex-col items-center justify-center space-y-2 min-h-[180px]">
@@ -275,7 +247,6 @@
                 container.append(emptySlotHtml);
             }
             
-            // ✅ Gắn sự kiện cho các nút Kick sau khi danh sách được render
             attachKickEvents();
         }
         
@@ -286,7 +257,6 @@
                 const usernameToKick = $(this).data('username');
 
                 if (confirm(`Bạn có chắc chắn muốn kick ${usernameToKick} ra khỏi phòng không?`)) {
-                    // Gọi hàm KickPlayer trên Hub
                     connection.invoke("KickPlayer", roomId, userIdToKick).catch(function (err) {
                         return console.error("Error kicking player: " + err.toString());
                     });
@@ -294,9 +264,7 @@
             });
         }
 
-        // --- Khởi tạo và Bắt đầu ---
         connection.start().then(function () {
-            // Lần đầu kết nối, tham gia phòng
             connection.invoke("JoinRoom", roomId, currentUserId, currentUsername, currentAvatar).catch(function (err) {
                 return console.error(err.toString());
             });
@@ -304,26 +272,21 @@
             return console.error("SignalR Connection Error: " + err.toString());
         });
         
-        // --- Xử lý sự kiện Độ khó ---
         $('#difficulty-select').on('change', function() {
             const newDifficulty = $(this).val();
             if (isHost) {
-                // Gửi lệnh cập nhật độ khó lên Hub
                 connection.invoke("SetDifficulty", roomId, newDifficulty).catch(function (err) {
                     return console.error("Error setting difficulty: " + err.toString());
                 });
             }
         });
 
-        // Hàm tạo ID phòng ngẫu nhiên
         function generateTeamId() {
-            // Tạo 5 chữ số ngẫu nhiên
             const randomDigits = Math.floor(10000 + Math.random() * 90000);
             return `T-${randomDigits}`;
         }
 
 
-        // --- Xử lý nút bấm Bắt đầu ---
         $('#btn-start-game').on('click',async function(e) {
             if($('#team-name-input').val()==""){
                 alert("Vui lòng nhập tên đội trước khi bắt đầu trò chơi.");
@@ -335,13 +298,10 @@
             e.preventDefault();
             if (isHost) {
                 try {
-                    // Gọi API để lấy đề bài ngẫu nhiên
                     const response = await fetch(apiEndpoint, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json',
-                            // Cần thêm header Authorization nếu API yêu cầu token
-                            // 'Authorization': 'Bearer ' + localStorage.getItem('authToken') 
                         }
                     });
 
@@ -349,12 +309,7 @@
                         const data = await response.json();
                         const challengeId = data.id;
 
-                        // Chuyển hướng đến trang chơi game
-                        // players=1 (mặc định 1 người chơi)
-                        // difficulty={difficultyInt}
-                        // challenge_id={challengeId}
                         const redirectUrl = `/play?players=${currentPlayers.length}&difficulty=${getDifficultyInt($("#difficulty-select").val())}&challenge_id=${challengeId}&teamId=${generateTeamId()}&roomId=${roomId}&teamName=${$("#team-name-input").val()}`;
-                        // Lấy độ khó đã chọn cuối cùng (được cập nhật trong currentDifficulty)
                         connection.invoke("StartGame", roomId, currentDifficulty, redirectUrl).catch(function (err) {
                             return console.error("Error starting game: " + err.toString());
                         });
@@ -362,7 +317,6 @@
                         const errorData = await response.json();
                         alert(`Lỗi: ${errorData.message || 'Không tìm thấy đề bài nào cho độ khó này.'}`);
                     } else {
-                        // Xử lý các lỗi khác (400 Bad Request, 500 Internal Server Error)
                         const errorData = await response.json();
                         alert(`Lỗi khi lấy đề bài: ${errorData.message || 'Đã xảy ra lỗi không xác định.'}`);
                     }

@@ -52,7 +52,6 @@ namespace knapsack_app.Pages.Admin
             };
 
             var apiPath = $"/api/user?pageIndex={apiQuery.PageIndex}&pageSize={apiQuery.PageSize}&searchTerm={apiQuery.SearchTerm}";
-            Console.WriteLine($"[DEBUG] Gọi API tại: {httpClient.BaseAddress}{apiPath}");
 
             try
             {

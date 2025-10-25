@@ -12,7 +12,6 @@ public class AdminService
         _context = context;
     }
 
-    // Tạo tài khoản admin mới
     public async Task<(bool Success, string Message)> CreateAccount(AdminCreationReqDto request)
     {
         var existedAcc = _context.Admin.FirstOrDefault(acc => acc.Account == request.Account);
@@ -30,19 +29,16 @@ public class AdminService
         return (true, "Tạo tài khoản thành công");
     }
 
-    // Lấy danh sách tất cả admin
     public async Task<List<AdminModel>> GetAllAdmins()
     {
         return _context.Admin.ToList();
     }
 
-    // Lấy thông tin admin theo id
     public async Task<AdminModel> GetAdminById(string id)
     {
         return _context.Admin.FirstOrDefault(a => a.Id == id);
     }
 
-    // Cập nhật thông tin admin
     public async Task<(bool Success, string Message)> UpdateAdmin(string id, AdminUpdateReqDto request)
     {
         var admin = _context.Admin.FirstOrDefault(a => a.Id == id);
@@ -61,7 +57,6 @@ public class AdminService
         return (true, "Cập nhật thành công");
     }
 
-    // Xóa admin
     public async Task<(bool Success, string Message)> DeleteAdmin(string id)
     {
         var admin = _context.Admin.FirstOrDefault(a => a.Id == id);
@@ -75,7 +70,6 @@ public class AdminService
         return (true, "Xóa thành công");
     }
 
-    // Đăng nhập admin
     public async Task<(bool Success, string Message, AdminModel Admin)> Login(LoginRequest request)
     {
         var admin = _context.Admin.FirstOrDefault(a => a.Account == request.Account && a.Passwords == request.Passwords);

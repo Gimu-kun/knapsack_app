@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-
 public static class FileHelper
 {
     public static async Task<string> ConvertToBase64Async(IFormFile file)

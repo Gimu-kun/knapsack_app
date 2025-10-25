@@ -13,7 +13,7 @@
 <body class="bg-gray-100 text-gray-800 font-[Inter] min-h-screen p-4 sm:p-8">
 
     <div class="max-w-7xl mx-auto">
-        <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-8 sm:mb-12 text-center tracking-tight">
+        <h1 class="text-xl sm:text-5xl font-extrabold text-gray-900 mb-8 sm:mb-12 text-center tracking-tight">
             🏆 Bảng Xếp Hạng <span class="text-blue-600">KNAPSACK 0/1</span>
         </h1>
 
@@ -104,7 +104,6 @@
                                     <td class="text-left py-3">
                                 <div class="flex items-center space-x-3">
                                     @{
-                                        // Xác định URL Avatar chính
                                         string mainAvatarUrl = entry.PlayerCount == 1 ? entry.Avatar : 
                                         (entry.TeamMembers?.FirstOrDefault()?.Avatar ?? "");
                                     }
@@ -121,18 +120,15 @@
                                                 }
                                                 else
                                                 {
-                                                    // Fallback: Avatar chữ cái đầu tên
                                                     <div class="w-full h-full rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg border-2 border-blue-400 shadow-md">
                                                         @entry.Name.FirstOrDefault().ToString().ToUpper()
                                                     </div>
                                                 }
                                     </div>
                                     }else{
-                                        // Chế độ MULTIPLAY (2, 3, 4 người chơi) - Hiển thị nhiều avatar
                                                 <div class="flex flex-shrink-0 -space-x-2 overflow-hidden">
                                                     @foreach (var member in entry.TeamMembers.Take(4)) // Chỉ hiển thị tối đa 4 avatar
                                                     {
-                                                        // Avatar 32x32px (w-8 h-8)
                                                         <div class="w-8 h-8 rounded-full border-2 border-white bg-gray-200 shadow-sm relative">
                                                             @if (!string.IsNullOrEmpty(member.Avatar))
                                                             {
@@ -142,7 +138,6 @@
                                                                     onerror="this.onerror=null; this.src='/images/default_avatar.png';" 
                                                                 />
                                                             }else{
-                                                                // Fallback: Avatar chữ cái
                                                                 <div class="w-full h-full rounded-full bg-indigo-400 text-white flex items-center justify-center font-bold text-xs">
                                                                     @member.Username.FirstOrDefault().ToString().ToUpper()
                                                                 </div>
@@ -154,13 +149,11 @@
                                     <div>
                                         @if (entry.PlayerCount == 1)
                                         {
-                                            // Chế độ SOLO
                                             <div class="font-bold text-gray-800">@entry.Name</div>
                                             <div class="text-xs text-gray-500 italic">Cá nhân</div>
                                         }
                                         else
                                         {
-                                            // Chế độ MULTIPLAY
                                             <div class="font-bold text-gray-900 mb-1">@entry.Name</div>
                                             <div class="text-xs text-gray-600 space-x-1 mt-1">
                                                 @foreach (var member in entry.TeamMembers)
@@ -199,35 +192,28 @@
 </body>
 
 <script>
-    // Hàm chuyển đổi độ khó từ chuỗi sang số nguyên (để tạo URL)
     function difficultyToInteger(difficultyString) {
         if (difficultyString === 'DỄ') return 1;
         if (difficultyString === 'TRUNG BÌNH') return 2;
         if (difficultyString === 'KHÓ') return 3;
-        return 1; // Mặc định
+        return 1;
     }
 
-    // Giá trị hiện tại được lấy từ Model C#
     const currentMode = '@Model.SelectedModeInt';
-    const currentDifficultyInt = '@Model.SelectedDifficultyInt'; // Giá trị INT của difficulty
+    const currentDifficultyInt = '@Model.SelectedDifficultyInt';
     
-    // Xử lý sự kiện click Mode
     document.querySelectorAll('.mode-tab').forEach(tab => {
         tab.addEventListener('click', function() {
             const newMode = this.dataset.mode;
-            // Dùng difficulty hiện tại (INT) để gửi đi
             const newUrl = `?players=${newMode}&difficulty=${currentDifficultyInt}`;
             window.location.href = newUrl;
         });
     });
 
-    // Xử lý sự kiện click Difficulty
     document.querySelectorAll('.difficulty-tab').forEach(tab => {
         tab.addEventListener('click', function() {
-            // Lấy data-difficulty đã được gán là INT (1, 2, 3)
             const newDifficultyInt = this.dataset.difficulty; 
             
-            // Dùng mode hiện tại (INT) để gửi đi
             const newUrl = `?players=${currentMode}&difficulty=${newDifficultyInt}`;
             window.location.href = newUrl;
         });

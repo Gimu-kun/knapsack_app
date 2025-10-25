@@ -69,6 +69,9 @@ builder.Services.AddScoped<HistoryService>();
 builder.Services.AddScoped<PasswordService>();
 builder.Services.AddScoped<LeaderBoardService>();
 builder.Services.AddScoped<GameService>();
+builder.Services.AddScoped<AnalyzingService>();
+builder.Services.AddScoped<UserProgressService>();
+builder.Services.AddScoped<SessionService>();
 
 // --- CẤU HÌNH AUTHENTICATION MỚI: Hỗ trợ Cookie-JWT Hybrid ---
 builder.Services

@@ -225,7 +225,8 @@ C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\9e1kdblecf-o3ny7
 C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\ef0mzu4emq-o3ny7b6fhh.gz
 C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\92oy9wdnsh-bmgc0lwk92.gz
 C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\knapsack_app.sourcelink.json
-C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\3rvymwtk2t-zzb1ziuglk.gz
 C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\ar71td47k4-ynelqkr5fz.gz
 C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\2cslywjo2o-fdpaa2ku9k.gz
 C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\ou7zzrdhzd-5odkhkz3rw.gz
+C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\t6c2je0e9w-5ipweew5fc.gz
+C:\Users\hieun\Desktop\knapsack_app\obj\Debug\net9.0\compressed\3rvymwtk2t-p2hrorbuhj.gz

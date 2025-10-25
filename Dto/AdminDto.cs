@@ -13,7 +13,7 @@ public class AdminUpdateReqDto
 {
     public string? Account { get; set; }
     public string? Passwords { get; set; }
-    public string? Avatar { get; set; } // base64 string hoặc url
+    public string? Avatar { get; set; }
     public bool? Role { get; set; }
 }
 

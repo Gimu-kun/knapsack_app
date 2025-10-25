@@ -13,10 +13,6 @@ using knapsack_app.Models;
 
 namespace knapsack_app.Pages.Cli
 {
-    // ======================================================================
-    // 3. CÁC LỚP ĐỊNH NGHĨA DỮ LIỆU
-    // ======================================================================
-    
 
     public class PlayGameModel : PageModel
     {
@@ -32,7 +28,6 @@ namespace knapsack_app.Pages.Cli
             _userService = userService;
         }
 
-        // 1. DỮ LIỆU ĐẦU VÀO TỪ SERVER (INPUT DATA)
         [BindProperty(SupportsGet = true)]
         public string Challenge_id { get; set; } = string.Empty;
         [BindProperty(SupportsGet = true)]
@@ -48,22 +43,17 @@ namespace knapsack_app.Pages.Cli
         public List<KnapsackItem> Items { get; set; } = new List<KnapsackItem>();
         public int[,] DPBoard { get; set; } = new int[1, 1]; 
         
-        // Dữ liệu parse từ ResultItemsJson
         public List<KnapsackItem> ResultItems { get; set; } = new List<KnapsackItem>();
-        // Dữ liệu parse từ MissArrayJson
         public List<MissCellDto> MissArray { get; set; } = new List<MissCellDto>(); 
 
-        // --- CẬP NHẬT TRẠNG THÁI TỐI GIẢN ---
         public bool GameStarted { get; set; } = false; 
         
-        // Thuộc tính hỗ trợ Razor (Chỉ số ma trận DP)
         public int dpRows => DPBoard.GetLength(0);
         public int dpCols => DPBoard.GetLength(1);
         public int capacity => InputGameData.MaxCapacity;
         public string? userId;
         public UserModel CurrentUser { get; set; } = null;
         
-        // Số lượng ô cần người dùng điền (không tính hàng 0 và cột 0)
         public int? InteractiveCells 
         {
             get
@@ -77,36 +67,26 @@ namespace knapsack_app.Pages.Cli
             }
         }
 
-        // Tổng số ô trong ma trận DP (bao gồm cả hàng 0 và cột 0)
         public int TotalInputCells => dpRows * dpCols; 
-        // ------------------------------------
-
-        // 2. LOGIC XỬ LÝ: LẤY DỮ LIỆU TỪ API
         public async Task<IActionResult> OnGetAsync()
         {
-            // 1. Lấy JWT từ cookie
             if (!HttpContext.Request.Cookies.TryGetValue("UserToken", out var token) || string.IsNullOrEmpty(token))
             {
                 return RedirectToPage("/Cli/Login");
             }
 
-            // 2. Xác thực token bằng JwtService
             var principal = _jwtService.ValidateToken(token);
             if (principal == null)
             {
-                // Token không hợp lệ hoặc hết hạn
                 return RedirectToPage("/Cli/Login");
             }
 
-            // 3. Lấy UserId từ claim
             userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
                 return RedirectToPage("/Cli/Login");
             }
 
-            // ✅ Đến đây, bạn đã có userId hợp lệ để sử dụng
-            // Ví dụ: truyền vào API hoặc dùng để log
             Console.WriteLine("Đăng nhập thành công với userId: " + userId);
             CurrentUser = await _userService.GetUserById(userId);
             if (string.IsNullOrEmpty(Challenge_id))
@@ -144,20 +124,15 @@ namespace knapsack_app.Pages.Cli
             }
         }
 
-        /**
-         * Phương thức nội bộ để phân tích cú pháp các chuỗi JSON lồng nhau
-         */
         private void ParseNestedJson()
         {
             var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
             
-            // 1. Parse Items Data (Danh sách vật phẩm câu hỏi)
             if (!string.IsNullOrEmpty(InputGameData.QuesDataJson))
             {
                 Items = JsonSerializer.Deserialize<List<KnapsackItem>>(InputGameData.QuesDataJson, options) ?? new List<KnapsackItem>();
             }
 
-            // 2. Parse DP Board (Ma trận quy hoạch động)
             if (!string.IsNullOrEmpty(InputGameData.DpBoardJson))
             {
                 var tempList = JsonSerializer.Deserialize<List<List<int>>>(InputGameData.DpBoardJson, options);
@@ -185,39 +160,27 @@ namespace knapsack_app.Pages.Cli
                 }
             }
             
-            // 3. Parse Result Items (Danh sách vật phẩm kết quả tối ưu)
             if (!string.IsNullOrEmpty(InputGameData.ResultItemsJson))
             {
                 ResultItems = JsonSerializer.Deserialize<List<KnapsackItem>>(InputGameData.ResultItemsJson, options) ?? new List<KnapsackItem>();
             }
             
-            // 4. Parse Miss Array (Danh sách các ô bị lỗi/sai)
-            // SỬ DỤNG LỚP CELLCOORDINATE ĐỂ PHÙ HỢP VỚI CẤU TRÚC JSON MỚI (X, Y)
             if (!string.IsNullOrEmpty(InputGameData.MissArrayJson))
             {
                 MissArray = JsonSerializer.Deserialize<List<MissCellDto>>(InputGameData.MissArrayJson, options) ?? new List<MissCellDto>();
             }
         }
 
-        /**
-         * Phương thức nội bộ để gán tên thân thiện (Item A, Item B, ...)
-         */
         private void AssignItemNames()
         {
-            // Gán tên cho danh sách Item chính
             for (int i = 0; i < Items.Count; i++)
             {
                 Items[i].Name = $"Item {((char)('A' + i)).ToString()}";
                 Items[i].Id = (i + 1).ToString();
             }
 
-            // Cập nhật tên cho ResultItems (nếu có) để nhất quán
             foreach (var resultItem in ResultItems)
             {
-                // Giả sử Id là GUID trong JSON, chúng ta cần tìm Id khớp với GUID
-                // Tuy nhiên, vì chúng ta đã gán Id là index (1, 2, 3...) cho Items,
-                // chúng ta chỉ có thể dựa vào GUID gốc nếu cần mapping chính xác.
-                // Ở đây, tôi giữ nguyên logic mapping để đảm bảo Name được gán chính xác.
                 var matchingItem = Items.FirstOrDefault(i => i.Id == resultItem.Id);
                 if (matchingItem != null)
                 {
@@ -225,7 +188,6 @@ namespace knapsack_app.Pages.Cli
                 }
                 else
                 {
-                    // Nếu không tìm thấy bằng ID đã gán (1, 2, 3...), thử tìm bằng Value/Weight
                     var originalItem = Items.FirstOrDefault(i =>
                         i.Value == resultItem.Value &&
                         i.Weight == resultItem.Weight);
@@ -238,7 +200,6 @@ namespace knapsack_app.Pages.Cli
             }
         }
 
-        // 3. XỬ LÝ KHI NGƯỜI DÙNG NHẤN NÚT START GAME (Tạo phiên chơi trên Server)
         public async Task<IActionResult> OnPostStartGameAsync()
         {
             if (!HttpContext.Request.Cookies.TryGetValue("UserToken", out var token) || string.IsNullOrEmpty(token))
@@ -246,14 +207,12 @@ namespace knapsack_app.Pages.Cli
                 return new JsonResult(new { success = false, message = "Người dùng chưa đăng nhập." }) { StatusCode = 401 };
             }
 
-            // 2. Xác thực
             var principal = _jwtService.ValidateToken(token);
             if (principal == null)
             {
                 return new JsonResult(new { success = false, message = "Token không hợp lệ hoặc hết hạn." }) { StatusCode = 401 };
             }
 
-            // 3. Lấy userId
             var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
             {
@@ -269,7 +228,7 @@ namespace knapsack_app.Pages.Cli
             {
                 ChallengeId = Challenge_id,
                 UserId = userId,
-                PlayerCount = 1 // Giả định solo
+                PlayerCount = 1
             };
 
             try
@@ -285,10 +244,8 @@ namespace knapsack_app.Pages.Cli
                     string jsonString = await response.Content.ReadAsStringAsync();
                     var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
                     
-                    // Lưu Session Data trả về từ Server
                     SessionData = JsonSerializer.Deserialize<GameSessionStarted>(jsonString, options);
                     
-                    // Bật trạng thái game đã bắt đầu
                     GameStarted = true; 
 
                     return new JsonResult(new { 

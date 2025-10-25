@@ -79,7 +79,6 @@ public class LeaderBoardService
 
     public async Task<List<TakenModel>> GetPlayerOrTeamHistory(string id)
     {
-        // Giả định ID đầu vào là team_id HOẶC user_id
         var history = await _context.Taken
             .Where(t => t.TeamId == id || t.UserId == id)
             .OrderByDescending(t => t.TakenAt)

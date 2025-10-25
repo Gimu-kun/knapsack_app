@@ -158,7 +158,6 @@
     }
 </div>
 
-@* --- Modal Thêm/Sửa Đề Bài (Điều chỉnh) --- *@
 <div id="editChallengeModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-edit" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
             <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
@@ -246,7 +245,6 @@
 </div>
 
 
-@* --- Modal Xem Chi Tiết Đề Bài --- *@
 <div id="detailChallengeModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-detail" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
@@ -325,6 +323,7 @@
     <script>
         const MAX_ITEMS = 15;
         const DEFAULT_ITEMS = 3;
+        const adminId = "@Model.adminId";
         const modal = document.getElementById('editChallengeModal');
         const modalTitle = document.getElementById('modal-title-edit');
         const saveButton = document.getElementById('save-button-text');
@@ -347,7 +346,6 @@
         const detailDpBoardHead = document.getElementById('detail-dpboard-head');
         const detailDpBoardBody = document.getElementById('detail-dpboard-body');
 
-        // --- Form Fields ---
         const fields = {
             Difficulty: document.getElementById('challenge-difficulty'),
             MaxCapacity: document.getElementById('challenge-capacity'),
@@ -524,6 +522,7 @@
                 DpBoardJson: isEdit ? fields.DpBoardJson.value : undefined,
                 ResultItemsJson: isEdit ? fields.ResultItemsJson.value : undefined,
                 MissArrayJson: isEdit ? fields.MissArrayJson.value : undefined,
+                OperatorId: adminId,
             };
 
             const payload = Object.fromEntries(
@@ -670,7 +669,6 @@ tableBody.appendChild(row);
 });
 }
 
-        // --- Search/Debounce Logic ---
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('search-input');
             const searchForm = document.getElementById('search-form');
@@ -686,7 +684,6 @@ tableBody.appendChild(row);
                 });
             }
             
-            // Khởi tạo form động khi trang tải
             initializeItems([]);
         });
         
@@ -694,7 +691,6 @@ tableBody.appendChild(row);
 }
 
 @functions {
-    // Hàm này giúp hiển thị độ khó bằng tiếng Việt
     public string GetVietnameseDifficulty(int difficulty)
     {
         return difficulty switch
@@ -706,7 +702,6 @@ tableBody.appendChild(row);
         };
     }
 
-    // Hàm này giúp tô màu cho độ khó
     public string GetDifficultyClass(int difficulty)
     {
         return difficulty switch

@@ -1,11 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Net.Http;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using System.ComponentModel.DataAnnotations; // Thêm thư viện này
-using Microsoft.AspNetCore.Http; // Thêm thư viện này cho CookieOptions
+
 
 namespace knapsack_app.Pages.Admin
 {

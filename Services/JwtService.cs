@@ -13,7 +13,6 @@ public class JwtService
         _jwtSettings = jwtSettings.Value;
     }
 
-    // Phương thức GenerateToken cho người dùng thông thường
     public string GenerateToken(string userId, string username, string? fullname)
     {
         var claims = new List<Claim>
@@ -37,15 +36,12 @@ public class JwtService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    // Phương thức GenerateToken cho Admin (Cookie-JWT Hybrid)
     public string GenerateToken(string userId, string account, bool role)
     {
         var claims = new List<Claim>
         {
-            // Sử dụng ClaimTypes.NameIdentifier cho ID người dùng
             new Claim(ClaimTypes.NameIdentifier, userId), 
             new Claim("account", account),
-            // ⚠️ CẬP NHẬT QUAN TRỌNG: Sử dụng ClaimTypes.Role để tương thích với [Authorize(Roles = "admin")]
             new Claim(ClaimTypes.Role, role ? "admin" : "user"),
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };

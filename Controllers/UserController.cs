@@ -8,10 +8,12 @@ namespace knapsack_app.Controllers
     public class UserController : ControllerBase
     {
         private readonly UserService _userService;
+        private readonly UserProgressService _progressService;
 
-        public UserController(UserService userService)
+        public UserController(UserService userService, UserProgressService progressService)
         {
             _userService = userService;
+            _progressService = progressService;
         }
 
         [HttpPost("login")]
@@ -22,23 +24,17 @@ namespace knapsack_app.Controllers
                 return BadRequest(new AuthResult { Success = false, Message = "Tài khoản và mật khẩu không được để trống." });
             }
 
-            // Gọi service để xác thực
             var authResult = await _userService.Login(request);
             
             if (authResult.Success)
             {
-                // Trả về token và thông báo thành công
                 return Ok(authResult);
             }
             else
             {
-                // Trả về 401 Unauthorized nếu thất bại
                 return Unauthorized(authResult); 
             }
         }
-
-
-        // --- CÁC PHƯƠNG THỨC ĐIỀU KHIỂN USER KHÁC (Đã có sẵn) ---
 
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromForm] UserCreationReqDto request)
@@ -81,6 +77,39 @@ namespace knapsack_app.Controllers
             if (!result.Success)
                 return BadRequest(result.Message);
             return Ok(result.Message);
+        }
+
+        [HttpGet("{userId}/progress")]
+        [ProducesResponseType(typeof(UserProgressDto), 200)]
+        [ProducesResponseType(404)]
+        public async Task<IActionResult> GetUserProgress(string userId)
+        {
+            var progress = await _progressService.GetUserProgressAsync(userId);
+
+            if (progress == null)
+            {
+                return NotFound($"Không tìm thấy người dùng với ID: {userId}.");
+            }
+
+            return Ok(progress);
+        }
+
+        [HttpPut("{id}/toggle-status")]
+        public async Task<IActionResult> ToggleUserStatus(string id)
+        {
+            var result = await _userService.ToggleUserStatus(id);
+            
+            if (!result.Success)
+            {
+                return BadRequest(new { Success = false, result.Message }); 
+            }
+            
+            return Ok(new 
+            { 
+                Success = true, 
+                result.Message, 
+                NewStatus = result.NewStatus 
+            });
         }
     }
 }

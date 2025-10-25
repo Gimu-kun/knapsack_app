@@ -2,12 +2,12 @@ namespace knapsack_app.ViewModels
 {
     public class DpCell
     {
-        public int I { get; set; } // Hàng (vật phẩm)
-        public int W { get; set; } // Cột (sức chứa)
-        public int CorrectValue { get; set; } // Giá trị đúng (lấy từ DPBoard)
-        public bool IsInput { get; set; } // Có phải là ô người dùng cần nhập không
+        public int I { get; set; }
+        public int W { get; set; }
+        public int CorrectValue { get; set; }
+        public bool IsInput { get; set; }
 
-        public string Id => $"dp-cell-{I}-{W}"; // ID HTML cho ô
+        public string Id => $"dp-cell-{I}-{W}";
     }
 
     public class GameData

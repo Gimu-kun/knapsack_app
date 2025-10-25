@@ -7,10 +7,12 @@ namespace knapsack_app.Pages.Cli
     public class LoginModel : PageModel
     {
         private readonly UserService _userService; 
+        private readonly SessionService _sessionService; 
         
-        public LoginModel(UserService userService)
+        public LoginModel(UserService userService,SessionService sessionService)
         {
             _userService = userService;
+            _sessionService = sessionService;
         }
 
         public class LoginInput
@@ -64,6 +66,8 @@ namespace knapsack_app.Pages.Cli
                         Expires = DateTimeOffset.UtcNow.AddHours(6)
                     });
                 }
+
+                var sessionService = await _sessionService.SetLogin(authResult.UserId!);
                 
                 return RedirectToPage("/Cli/Home"); 
             }

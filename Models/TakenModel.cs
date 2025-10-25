@@ -40,7 +40,7 @@ public class TakenModel
     public virtual UserModel User { get; set; } = null!;
 
     [ForeignKey(nameof(ChallengeId))]
-    public virtual KsChallengeModel Challenge { get; set; } = null!; // Giả định tên model là KsChallengeModel
+    public virtual KsChallengeModel Challenge { get; set; } = null!;
 
 
     public TakenModel() 

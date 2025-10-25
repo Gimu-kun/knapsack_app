@@ -2,7 +2,6 @@ using System.ComponentModel.DataAnnotations;
 
 namespace knapsack_app.ViewModels
 {
-    // DTO để hiển thị danh sách đề bài trên bảng
     public class ChallengeViewModel
     {
         public string Id { get; set; } = string.Empty;
@@ -37,5 +36,6 @@ namespace knapsack_app.ViewModels
 
         public int MissCount { get; set; } = 0;
         public string? MissArrayJson { get; set; } = "[]";
+        public string? OperatorId { get; set; } = string.Empty;
     }
 }

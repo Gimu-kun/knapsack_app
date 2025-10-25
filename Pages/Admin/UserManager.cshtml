@@ -83,11 +83,19 @@
                             <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">@user.CreatedAt.ToString("dd/MM/yyyy")</td>
                             <td class="px-4 py-3 whitespace-nowrap text-right text-sm font-medium space-x-2">
                                 <button type="button" 
+                                        data-user-id="@user.Id"
+                                        data-user-account="@user.Account"
+                                        data-current-status="@user.Status"
+                                        onclick="toggleUserStatus(this)"
+                                        class="toggle-status-btn font-medium @(user.Status ? "text-red-600 hover:text-red-900" : "text-green-600 hover:text-green-900")">
+                                    @(user.Status ? "Khóa" : "Mở khóa")
+                                </button>
+                                <button type="button" 
                                         onclick="showHistory('@user.Id', '@user.Account')"
                                         class="text-blue-600 hover:text-blue-900 font-medium">Lịch sử Chơi</button>
-                                
-                                <a asp-page-handler="Delete" asp-route-id="@user.Id" class="text-red-600 hover:text-red-900" 
-                                    onclick="return confirm('Bạn có chắc chắn muốn xóa người dùng @user.Account không?')">Xóa</a>
+                                <button type="button" 
+                                        onclick="showProgress('@user.Id', '@user.Account')"
+                                        class="text-purple-600 hover:text-green-900 font-medium">Tiến trình</button>
                             </td>
                         </tr>
                     }
@@ -142,47 +150,95 @@
 <div id="historyModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-history" role="dialog" aria-modal="true">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
         <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg z-50 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-xl leading-6 font-medium text-gray-900" id="modal-title-history">
+                                Lịch sử Chơi của: <span id="history-account-name" class="font-bold text-blue-600"></span>
+                            </h3>
+                            
+                            <div class="mt-4 overflow-y-auto max-h-96">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Màn chơi</th> 
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Độ khó</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian (giây)</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm đạt được</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời điểm chơi</th>
+                                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kết quả</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="history-table-body" class="bg-white divide-y divide-gray-100">
+                                        <tr id="history-loading-row">
+                                            <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">Đang tải lịch sử chơi...</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
 
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
-            
-            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div class="sm:flex sm:items-start">
-                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                        <h3 class="text-xl leading-6 font-medium text-gray-900" id="modal-title-history">
-                            Lịch sử Chơi của: <span id="history-account-name" class="font-bold text-blue-600"></span>
-                        </h3>
-                        
-                        <div class="mt-4 overflow-y-auto max-h-96">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50 sticky top-0">
-                                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID Màn chơi</th> 
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Độ khó</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời gian (giây)</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Điểm đạt được</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Thời điểm chơi</th>
-                                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kết quả</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="history-table-body" class="bg-white divide-y divide-gray-100">
-                                    <tr id="history-loading-row">
-                                        <td colspan="6" class="px-4 py-4 text-center text-sm text-gray-500">Đang tải lịch sử chơi...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                            <p id="history-no-data" class="mt-4 text-sm text-gray-500 hidden">Người dùng này chưa có lịch sử chơi nào.</p>
+
                         </div>
-
-                        <p id="history-no-data" class="mt-4 text-sm text-gray-500 hidden">Người dùng này chưa có lịch sử chơi nào.</p>
-
                     </div>
                 </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="closeHistoryModal()"
+                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Đóng
+                    </button>
+                </div>
             </div>
-            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button type="button" onclick="closeHistoryModal()"
-                        class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
-                    Đóng
-                </button>
+        </div>
+    </div>
+</div>
+
+<div id="progressModal" class="fixed inset-0 z-50 overflow-y-auto hidden" aria-labelledby="modal-title-progress" role="dialog" aria-modal="true">
+    <div class="flex items-end items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+        <div class="fixed inset-0 bg-gray-500/30 transition-opacity" aria-hidden="true">
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white z-50 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
+                
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-xl leading-6 font-medium text-gray-900" id="modal-title-progress">
+                                Tiến trình Thống kê của: <span id="progress-account-name" class="font-bold text-green-600"></span>
+                            </h3>
+                            
+                            <div class="mt-4 overflow-y-auto max-h-[70vh]"> 
+                                
+                                <h4 class="text-lg font-semibold text-gray-800 my-4 border-b pb-2">Thông tin Chung</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6" id="progress-general-stats">
+                                    <div class="col-span-3 text-center text-sm text-gray-500">Đang tải dữ liệu tiến trình...</div>
+                                </div>
+
+                                <h4 class="text-lg font-semibold text-gray-800 my-4 border-b pb-2">Điểm Tích Lũy Hàng Ngày</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                                    <canvas id="dailyScoreChart" class="w-full h-96"></canvas>
+                                </div>
+                                
+                                <h4 class="text-lg font-semibold text-gray-800 my-4 border-b pb-2">Số Trận Theo Độ Khó Hàng Ngày</h4>
+                                <div class="bg-gray-50 p-4 rounded-lg shadow-inner">
+                                    <canvas id="difficultyChart" class="w-full h-96"></canvas>
+                                </div>
+                                
+                                <p id="progress-no-data" class="mt-4 text-sm text-gray-500 hidden">Người dùng này chưa có dữ liệu tiến trình chơi.</p>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" onclick="closeProgressModal()"
+                            class="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        Đóng
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -190,6 +246,10 @@
 
 
 @section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const searchInput = document.getElementById('search-input');
@@ -207,48 +267,22 @@
             }
         });
 
-        const modal = document.getElementById('historyModal');
+        const historyModal = document.getElementById('historyModal');
         const historyTableBody = document.getElementById('history-table-body');
         const historyNoData = document.getElementById('history-no-data');
-        const loadingRow = document.getElementById('history-loading-row');
+        const historyLoadingRow = document.getElementById('history-loading-row');
+        
+        const progressModal = document.getElementById('progressModal');
+        const progressGeneralStats = document.getElementById('progress-general-stats');
+        const progressNoData = document.getElementById('progress-no-data');
 
-        function showHistory(userId, accountName) {
-            document.getElementById('history-account-name').innerText = accountName;
+        let dailyScoreChart;
+        let difficultyChart;
 
-            historyNoData.classList.add('hidden');
-            loadingRow.classList.remove('hidden');
-            historyTableBody.innerHTML = '';
-            historyTableBody.appendChild(loadingRow);
-
-            modal.classList.remove('hidden');
-            fetch(`/Admin/UserManager?handler=PlayHistory&userId=${userId}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Lỗi tải dữ liệu. Mã: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    loadingRow.classList.add('hidden');
-                    historyTableBody.innerHTML = '';
-
-                    if (data && data.length > 0) {
-                        data.forEach(item => {
-                            const row = createHistoryRow(item);
-                            historyTableBody.appendChild(row);
-                        });
-                    } else {
-                        historyNoData.classList.remove('hidden');
-                    }
-                })
-                .catch(error => {
-                    console.error('Lỗi khi tải lịch sử chơi:', error);
-                    loadingRow.classList.add('hidden');
-                    historyTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-4 text-center text-sm text-red-500">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
-                    historyNoData.classList.add('hidden');
-                });
+        function closeHistoryModal() {
+            historyModal.classList.add('hidden');
         }
-
+        
         function getVietnameseDifficulty(difficulty) {
             switch (difficulty) {
                 case 1:
@@ -264,9 +298,7 @@
 
         function createHistoryRow(item) {
             const tr = document.createElement('tr');
-
             const difficultyVietnamese = getVietnameseDifficulty(item.challengeDifficulty);
-
             const resultClass = item.takenScore > 0 ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
             const resultText = item.takenScore > 0 ? 'Hoàn thành' : 'Chưa hoàn thành';
             
@@ -285,8 +317,278 @@
             return tr;
         }
 
-        function closeHistoryModal() {
-            modal.classList.add('hidden');
+        function showHistory(userId, accountName) {
+            document.getElementById('history-account-name').innerText = accountName;
+
+            historyNoData.classList.add('hidden');
+            const loadingRowClone = historyLoadingRow.cloneNode(true);
+            loadingRowClone.classList.remove('hidden');
+            
+            historyTableBody.innerHTML = '';
+            historyTableBody.appendChild(loadingRowClone);
+
+            historyModal.classList.remove('hidden');
+            
+            fetch(`/Admin/UserManager?handler=PlayHistory&userId=${userId}`) 
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Lỗi tải dữ liệu. Mã: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    historyTableBody.innerHTML = '';
+                    loadingRowClone.classList.add('hidden');
+
+                    if (data && data.length > 0) {
+                        data.forEach(item => {
+                            const row = createHistoryRow(item);
+                            historyTableBody.appendChild(row);
+                        });
+                    } else {
+                        historyNoData.classList.remove('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải lịch sử chơi:', error);
+                    historyTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-4 text-center text-sm text-red-500">Lỗi tải dữ liệu: ${error.message}</td></tr>`;
+                    historyNoData.classList.add('hidden');
+                });
+        }
+
+        function closeProgressModal() {
+            progressModal.classList.add('hidden');
+            if (dailyScoreChart) dailyScoreChart.destroy();
+            if (difficultyChart) difficultyChart.destroy();
+        }
+
+        function showNoDataForChart(canvasId, titleText) {
+            const container = document.getElementById(canvasId + 'Container') || document.getElementById(canvasId).parentElement;
+            const existingNoData = container.querySelector('.no-data-chart');
+
+            if (!existingNoData) {
+                const noDataDiv = document.createElement('div');
+                noDataDiv.className = 'no-data-chart flex flex-col items-center justify-center h-full p-4 text-center text-gray-500 bg-gray-50 rounded-lg border border-dashed';
+                noDataDiv.innerHTML = `
+                    <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l2-2h4l2 2v13a2 2 0 01-2 2H9a2 2 0 01-2-2zM9 9h6"></path></svg>
+                    <p class="font-medium">${titleText}</p>
+                    <p class="text-sm">Không có dữ liệu chơi để hiển thị biểu đồ này.</p>
+                `;
+                container.appendChild(noDataDiv);
+            }
+        }
+
+        function showProgress(userId, accountName) {
+            document.getElementById('progress-account-name').innerText = accountName;
+            
+            progressNoData.classList.add('hidden');
+            progressGeneralStats.innerHTML = '<div class="col-span-3 text-center text-sm text-gray-500">Đang tải dữ liệu tiến trình...</div>';
+            
+            progressModal.classList.remove('hidden');
+
+            if (dailyScoreChart) dailyScoreChart.destroy();
+            if (difficultyChart) difficultyChart.destroy();
+
+            fetch(`/api/user/${userId}/progress`) 
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 404 || response.status === 204) {
+                        return null;
+                    }
+                    throw new Error(`Lỗi tải dữ liệu. Mã: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                progressGeneralStats.innerHTML = '';
+                
+                updateGeneralStats(data);      
+
+                if (!data || !data.dailyActivities || data.dailyActivities.length === 0) {
+                    progressNoData.classList.remove('hidden');
+                    
+                    showNoDataForChart('dailyScoreChart', 'Điểm Tích Lũy Hàng Ngày');
+                    showNoDataForChart('difficultyChart', 'Số Trận Theo Độ Khó Hàng Ngày');
+                    
+                    return;
+                }
+
+                const labels = data.dailyActivities.map(a => a.takenDate);
+                const scores = data.dailyActivities.map(a => a.totalScoreAchieved);
+                
+                const difficultyKeys = Array.from(new Set(data.dailyActivities.flatMap(a => Object.keys(a.challengesByDifficulty))));
+                
+                const difficultyDatasets = difficultyKeys.map(key => ({
+                    label: `Trận ${key.charAt(0).toUpperCase() + key.slice(1)}`,
+                    data: data.dailyActivities.map(a => a.challengesByDifficulty[key] || 0),
+                    borderColor: getDifficultyColor(key, 1),
+                    backgroundColor: getDifficultyColor(key, 0.7),
+                    borderWidth: 1, 
+                }));
+
+                renderDailyScoreChart(labels, scores);
+
+                renderDifficultyChart(labels, difficultyDatasets);
+            })
+            .catch(error => {
+                console.error('Lỗi khi tải tiến trình:', error);
+                progressGeneralStats.innerHTML = `<div class="col-span-3 text-center text-sm text-red-500">Lỗi: ${error.message}</div>`;
+            });
+        }
+
+        function updateGeneralStats(data) {
+            const lastLogin = data.loginStatus.lastLogin ? new Date(data.loginStatus.lastLogin).toLocaleString() : 'N/A';
+            const totalDays = data.loginStatus.daysSinceRegistration;
+            const activeDays = data.dailyActivities ? data.dailyActivities.length : 0;
+            const createdAt = data.createdAt ? new Date(data.createdAt).toLocaleDateString() : 'N/A';
+            
+            progressGeneralStats.innerHTML = `
+                <div class="p-3 bg-white border rounded-lg">
+                    <p class="text-xs text-gray-500">Ngày tạo TK</p>
+                    <p class="text-sm font-semibold">${createdAt}</p>
+                </div>
+                <div class="p-3 bg-white border rounded-lg">
+                    <p class="text-xs text-gray-500">Đăng nhập cuối</p>
+                    <p class="text-sm font-semibold">${lastLogin}</p>
+                </div>
+                <div class="p-3 bg-white border rounded-lg">
+                    <p class="text-xs text-gray-500">Tần suất hoạt động</p>
+                    <p class="text-sm font-semibold text-indigo-600">${activeDays} / ${totalDays} ngày</p>
+                </div>
+            `;
+        }
+
+        function renderDailyScoreChart(labels, data) {
+            const ctx = document.getElementById('dailyScoreChart').getContext('2d');
+            dailyScoreChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Tổng điểm đạt được',
+                        data: data,
+                        fill: true,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Điểm số' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Điểm Tích Lũy Hàng Ngày' }
+                    }
+                }
+            });
+        }
+
+        function renderDifficultyChart(labels, datasets) {
+            const ctx = document.getElementById('difficultyChart').getContext('2d');
+            difficultyChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { 
+                            stacked: true,
+                            beginAtZero: true,
+                            title: { display: true, text: 'Số Trận' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        title: { display: true, text: 'Số Trận Tham Gia Theo Độ Khó' }
+                    }
+                }
+            });
+        }
+
+        function getDifficultyColor(difficulty, alpha = 1) {
+            let colorBase;
+            switch (difficulty.toLowerCase()) {
+                case 'easy':
+                    colorBase = '75, 192, 192'; // Teal
+                    break;
+                case 'medium':
+                    colorBase = '255, 159, 64'; // Orange
+                    break;
+                case 'hard':
+                    colorBase = '255, 99, 132'; // Red
+                    break;
+                default:
+                    colorBase = '201, 203, 207'; // Gray
+                    break;
+            }
+            return `rgba(${colorBase}, ${alpha})`;
+        }
+
+        async function toggleUserStatus(buttonElement) {
+            const userId = buttonElement.getAttribute('data-user-id');
+            const accountName = buttonElement.getAttribute('data-user-account');
+            const currentStatus = buttonElement.getAttribute('data-current-status') === 'True'; // Chuyển đổi từ string "True"/"False" sang boolean
+
+            const actionText = currentStatus ? "khóa" : "mở khóa";
+            const newStatusText = currentStatus ? "Bị khóa" : "Hoạt động";
+            const newStatusClass = currentStatus ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800";
+            
+            if (!confirm(`Bạn có chắc chắn muốn ${actionText} tài khoản ${accountName} không?`)) {
+                return;
+            }
+
+            try {
+                buttonElement.disabled = true;
+                buttonElement.textContent = 'Đang xử lý...';
+                
+                const response = await fetch(`/api/user/${userId}/toggle-status`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    const tableRow = buttonElement.closest('tr');
+                    console.log("tableRow",tableRow);
+                    const statusCell = tableRow.querySelector('td:nth-child(4) span');
+                    console.log("statusCell",statusCell);
+                    statusCell.className = `inline-flex items-center px-3 py-0.5 rounded-full text-xs font-semibold ${newStatusClass}`;
+                    statusCell.textContent = newStatusText;
+
+                    buttonElement.textContent = currentStatus ? "Mở khóa" : "Khóa";
+                    buttonElement.setAttribute('data-current-status', (!currentStatus).toString());
+                    buttonElement.className = `toggle-status-btn font-medium ${!currentStatus ? "text-red-600 hover:text-red-900" : "text-green-600 hover:text-green-900"}`;
+                    
+                    alert('Cập nhật trạng thái thành công');
+
+                } else {
+                    alert('Lỗi: ' + (result.Message || 'Có lỗi xảy ra khi cập nhật trạng thái.'));
+                }
+            } catch (error) {
+                console.error('Lỗi khi gọi API:', error);
+                alert('Lỗi kết nối: Không thể kết nối đến máy chủ.');
+            } finally {
+                buttonElement.disabled = false;
+                if (buttonElement.textContent === 'Đang xử lý...') {
+                    buttonElement.textContent = currentStatus ? "Khóa" : "Mở khóa";
+                    buttonElement.className = `toggle-status-btn font-medium ${currentStatus ? "text-red-600 hover:text-red-900" : "text-green-600 hover:text-green-900"}`;
+                }
+            }
         }
     </script>
 }

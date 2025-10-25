@@ -123,7 +123,7 @@
 
             <div class="lg:col-span-3 space-y-8">
 
-                <div class="bg-white p-6 rounded-xl shadow-lg sticky top-20">
+                <div class="bg-white p-6 rounded-xl shadow-lg sticky top-20 z-20">
                     <h3 class="text-2xl font-bold mb-4 text-gray-900">1.
                         Danh Sách Vật Phẩm</h3>
                     <p class="text-sm text-gray-600 mb-4">Thông số cơ bản của các vật phẩm.</p>
@@ -185,9 +185,9 @@
                         style="max-height: 0;">
                         <hr class="my-3">
                         <h4 class="text-md font-bold mb-2 text-gray-900">Thuật Toán Quy Hoạch Động (DP)</h4>
-                        <p class="text-sm text-gray-700 mb-2">Giá trị tại ô $DP[i][w]$ là giá trị lớn nhất có thể đạt
+                        <p class="text-sm text-gray-700 mb-2">Giá trị tại ô DP[i][w] là giá trị lớn nhất có thể đạt
                             được khi
-                            chọn từ **$i$ vật phẩm đầu tiên** với **túi có sức chứa $w$**.</p>
+                            chọn từ i vật phẩm đầu tiên với túi có sức chứa w</p>
 
                         <p class="text-sm font-semibold text-blue-600 mt-3">Công Thức Truy Hồi (Recurrence Relation):
                         </p>
@@ -211,7 +211,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                             </pre>
                         </div>
                         <p class="text-sm text-gray-600 mt-3 italic">
-                            **Giá trị tối ưu** cuối cùng sẽ nằm ở ô $DP[@items.Count][@capacity]$.
+                            **Giá trị tối ưu** cuối cùng sẽ nằm ở ô DP[@items.Count][@capacity].
                         </p>
                     </div>
                 </div>
@@ -219,68 +219,74 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 <div class="bg-white p-6 rounded-xl shadow-lg">
                     <h3 class="text-2xl font-bold mb-4 text-gray-900">2.
                         Bảng Quy Hoạch Động</h3>
-                    <p class="text-sm text-gray-600 mb-4">Giá trị tối đa đạt được khi xét $i$ vật phẩm đầu tiên và có
-                        sức chứa $w$.</p>
+                    <p class="text-sm text-gray-600 mb-4">Giá trị tối đa đạt được khi xét i vật phẩm đầu tiên và có
+                        sức chứa w.</p>
 
-                    <div class="overflow-x-auto dp-table-container">
+                    <div class="overflow-x-auto dp-table-container relative">
                         <table class="min-w-full border-collapse table-fixed border border-gray-300">
-                            <thead class="bg-gray-100 sticky top-0 z-10">
+                            <thead class="bg-gray-100 sticky top-0 z-20">
                                 <tr>
-                                    <th class="dp-header-i w-10 bg-gray-300 text-gray-600 border border-gray-300">
+                                    <th class="dp-header-i w-10 bg-gray-300 text-gray-600 border border-gray-300
+                                            sticky left-0 z-30">
                                         i\w
                                     </th>
                                     @for (int w = 0; w < dpCols; w++)
                                     {
-                                        <th class="dp-header-w w-12 text-gray-600 font-bold border border-gray-300">
+                                        <th class="dp-header-w w-12 text-gray-600 font-bold border border-gray-300
+                                                bg-gray-100 sticky top-0 z-20">
                                             @w
                                         </th>
                                     }
                                 </tr>
                             </thead>
+
                             <tbody id="dp-board-body">
                                 @for (int i = 0; i < dpRows; i++)
                                 {
                                     <tr class="h-12 border-t border-gray-300">
-                                        <th class="dp-header-i w-10 bg-gray-200 text-red-600 font-bold border border-gray-300">
+                                        <th class="dp-header-i w-10 bg-gray-200 text-red-600 font-bold border border-gray-300
+                                                sticky left-0 z-30">
                                             @(i)
                                         </th>
+
                                         @for (int w = 0; w < dpCols; w++)
                                         {
                                             var cellValue = Model.DPBoard[i, w];
                                             var cellId = $"dp-cell-{i}-{w}";
-                                            
                                             var isBoundary = i == 0 || w == 0;
-                                            // KIỂM TRA: Ô này có nằm trong danh sách các lỗ bị đục không?
                                             var isMissedCell = missedCells.Contains((i, w));
-                                            <td id="@cellId" 
-                                                class="dp-cell text-center border border-gray-300 p-0"
+
+                                            <td id="@cellId"
+                                                class="dp-cell text-center border border-gray-300 p-0
+                                                    @((w == 0) ? "sticky left-0 z-20 bg-white" : "")"
                                                 data-i="@i"
                                                 data-w="@w"
                                                 data-correct-value="@cellValue"
                                                 data-is-input="@(isMissedCell ? "true" : "false")"
                                                 data-is-completed="false">
 
-                                                @if (isBoundary) // Ô Biên (Hàng/Cột 0): Luôn hiển thị
+                                                @if (isBoundary)
                                                 {
                                                     <div class="cell-content w-full h-full flex items-center justify-center">
                                                         <span class="dp-value text-gray-700 font-semibold">@cellValue</span>
                                                     </div>
                                                 }
-                                                else if (isMissedCell) // Ô bị Đục Lỗ (trong MissArray): Hiển thị Input
+                                                else if (isMissedCell)
                                                 {
                                                     <div class="cell-content w-full h-full flex items-center justify-center">
-                                                        <input type="number" 
-                                                            class="dp-input w-full h-full text-center font-bold text-gray-900 bg-yellow-50 focus:border-blue-500 p-1 m-0 appearance-none border-none"
+                                                        <input type="number"
+                                                            class="dp-input w-full h-full text-center font-bold text-gray-900 bg-yellow-50 
+                                                                    focus:border-blue-500 p-1 m-0 appearance-none border-none"
                                                             min="0"
                                                             max="999"
                                                             data-i="@i"
                                                             data-w="@w"
-                                                            autocomplete="off" /> 
+                                                            autocomplete="off" />
 
                                                         <span class="dp-value-hidden hidden">@cellValue</span>
                                                     </div>
                                                 }
-                                                else // Ô Bên Trong Khác: Hiển thị Mask (trống)
+                                                else
                                                 {
                                                     <span class="dp-hidden-mask text-gray-400 font-extrabold text-xl select-none block"></span>
                                                     <span class="dp-value-hidden hidden">@cellValue</span>
@@ -350,10 +356,14 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         </div>
         </div>
     </main>
-    <div id="final-results-modal" class="fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center z-50 p-4 hidden">
-        <div class="bg-white p-10 rounded-xl shadow-2xl text-center max-w-lg w-full">
-            <h2 class="text-4xl font-extrabold text-green-600 mb-4">🎉 HOÀN THÀNH THỬ THÁCH! 🎉</h2>
-            <p class="text-lg text-gray-700 mb-6">Bạn đã tìm được tổ hợp vật phẩm đạt giá trị Tối Ưu: <span id="optimal-value-display" class="font-bold text-blue-600"></span></p>
+    <div id="final-results-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-95 flex flex-col items-center justify-center z-50 p-4">
+        <div class="bg-white p-10 rounded-xl shadow-2xl text-center max-w-xl w-full">
+            <h2 id="finale-result-title" class="text-3xl font-extrabold text-green-600 mb-4"></h2>
+            
+            <div class="mx-15 w-80 h-80"> 
+                <img id="result-image" src="" alt="Kết quả hoàn thành" class="mx-auto rounded-lg object-contain">
+            </div>
+            <p class="text-lg text-gray-700 mb-6">Tổ hợp vật phẩm đạt giá trị Tối Ưu: <span id="optimal-value-display" class="font-bold text-blue-600"></span></p>
 
             <div class="space-y-3 p-4 bg-gray-50 rounded-lg mb-8">
                 <p class="text-xl font-bold text-gray-800">Tổng điểm đạt được: <span id="final-score-display" class="text-3xl text-indigo-700">0</span></p>
@@ -403,16 +413,20 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
         const ALL_ITEMS_DATA = @Html.Raw(JsonConvert.SerializeObject(Model.Items));
         const finalResultsModal = document.getElementById('final-results-modal');
         const finalScoreDisplay = document.getElementById('final-score-display');
+        const finalResultTitle = document.getElementById('finale-result-title');
         const timeUsedDisplay = document.getElementById('time-used-display');
         const optimalValueDisplay = document.getElementById('optimal-value-display');
         const countdownModal = document.getElementById('countdown-modal');
         const countdownDisplay = document.getElementById('countdown-display');
+        const resultImage = document.getElementById('result-image');
         // --- KẾT THÚC KHAI BÁO CÁC BIẾN MỚI ---
 
         // Điểm thưởng/phạt
         const SCORE_CORRECT = 500;
         const SCORE_INCORRECT = -100;
         const REVEAL_COST = 1000;
+        let LAST_TRIGGER_PERCENT = 0;
+        const PENALTY_AMOUNT = 100;
         
         const scoreElement = document.getElementById('current-score');
 
@@ -554,6 +568,9 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     // Cập nhật điểm trên UI
                     if (scoreElement) {
                         scoreElement.textContent = data.newScore;
+                        if(data.newScore == 0){
+                            challengeFailedByTime();
+                        }
                     }
                     
                     // Hiển thị thông báo hoặc hiệu ứng thành công/thất bại trên UI
@@ -647,7 +664,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             timerContainer.classList.remove('bg-red-100', 'animate-pulse', 'bg-green-100', 'text-green-800');
             timerContainer.classList.add('bg-gray-600', 'text-white');
             
-            alert(`⌛ THỬ THÁCH THẤT BẠI! Đã hết thời gian quy định theo Server. Vui lòng thử lại!`);
+            showFinalResults('🙈 BỊ BẮT MẤT RỒI! 🙈','/imgs/be-arrested.png');
         }
 
         // =======================================================
@@ -695,6 +712,16 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
 
                     // Cập nhật hiển thị bằng giá trị từ Server
                     usedTimeSeconds = MAX_DURATION_SECONDS - timeRemainingSeconds;
+                    const usedPercent = Math.floor((usedTimeSeconds / MAX_DURATION_SECONDS) * 100);
+                    const currentThreshold = Math.floor(usedPercent / 10) * 10;
+                    if (currentThreshold > LAST_TRIGGER_PERCENT && currentThreshold >= 10 && currentThreshold <= 100) {
+                        LAST_TRIGGER_PERCENT = currentThreshold;
+
+                        console.log(`Đã vượt qua ngưỡng ${currentThreshold}%. Trừ ${PENALTY_AMOUNT} điểm.`);
+                        
+                        await adjustScoreOnServer(-PENALTY_AMOUNT); 
+                    }
+
                     timerDisplay.textContent = formatTime(timeRemainingSeconds);
                     // Cập nhật giao diện cảnh báo
                     if (timeRemainingSeconds <= 60 && timeRemainingSeconds > 0) {
@@ -808,6 +835,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     })
                     return;
                 }
+                startCountdown(); 
             });
         }
 
@@ -1139,26 +1167,19 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 fetch(`/api/Game/End/${takenId}/${usedTimeSeconds}`, {
                     method: 'POST'
                 });
+                showFinalResults('🎉 PHI VỤ HOÀN HẢO! 🎉','/imgs/steal-all.png');
+                startConfetti();
             } catch (error) {
                 console.error("Lỗi khi khi cập nhật số liệu kết thúc game:", error);
             }
-            if (isOptimal) {
-                showFinalResults();
-                startConfetti();
-            } else {
-                alert(`Game Over. Tổng Giá Trị: ${finalValue}.`);
-            }
         }
         
-        // 4. Logic Hoàn Thành Trò Chơi DP (EndGame Mới)
         function endGame(isSuccess = false, reason = 'TimeUp') { 
             
-            // 1. Tiết lộ toàn bộ bảng DP (bao gồm cả ô mask)
             dpBoardBody.querySelectorAll('.dp-cell').forEach(cell => {
                  const isBoundary = parseInt(cell.dataset.i) === 0 || parseInt(cell.dataset.w) === 0;
                  const isCompleted = cell.dataset.isCompleted === 'true';
                  
-                 // Chỉ tiết lộ các ô chưa được hoàn thành (mask hoặc input bị bỏ sót)
                  if (!isBoundary && !isCompleted) {
                      const correctValue = cell.dataset.correctValue;
                      
@@ -1174,22 +1195,15 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                  }
             });
             
-            // *** ĐIỂM CHÍNH: KÍCH HOẠT VÀ HIỂN THỊ KHU VỰC KNAPSACK ***
-            if (isSuccess && reason === 'DPBoardCompleted') {
-                // Hiển thị 2 khu vực Knapsack/Items
-                knapsackSection.classList.remove('hidden'); 
-                itemsSection.classList.remove('hidden');
-            } else if (reason === 'TimeUp') {
-                // Đã xử lý trong challengeFailedByTime.
-            }
+            knapsackSection.classList.remove('hidden'); 
+            itemsSection.classList.remove('hidden');
         }
         
-        // ... (Logic input DP giữ nguyên) ...
         dpBoardBody.querySelectorAll('.dp-input').forEach(input => {
             input.addEventListener('change', (e) => {
                 if (!gameActive) {
                     alert("Vui lòng nhấn nút 'BẮT ĐẦU TRÒ CHƠI' trước!");
-                    e.target.value = ''; // Xóa giá trị đã nhập
+                    e.target.value = '';
                     return;
                 }
             
@@ -1204,7 +1218,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 if (isCompleted) return; 
 
                 if (enteredValue === correctValue) {
-                    // --- Giá trị ĐÚNG ---
                     const correctSpan = document.createElement('span');
                     correctSpan.className = 'dp-value text-green-700 font-semibold';
                     correctSpan.textContent = correctValue;
@@ -1215,7 +1228,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                     cellElement.dataset.isCompleted = 'true'; 
                     remainingInputCells--; 
                     adjustScoreOnServer(SCORE_CORRECT);
-                    // Tiết lộ các ô *KHÔNG PHẢI INPUT* có cùng giá trị
+
                     dpBoardBody.querySelectorAll('.dp-cell').forEach(otherCell => {
                         const otherCorrectValue = parseInt(otherCell.dataset.correctValue);
                         const isOtherInput = otherCell.dataset.isInput === 'true'; 
@@ -1241,12 +1254,10 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                             return console.error("Error async cell: " + err.toString());
                         });
                     }
-                    // Kiểm tra hoàn thành trò chơi DP
                     if (remainingInputCells <= 0) { 
                         setTimeout(() => endGame(true, 'DPBoardCompleted'), 500); 
                     }
                 } else {
-                    // --- Giá trị SAI ---
                     if(isMultiplayer){
                         const row = parseInt(cellElement.dataset.i);
                         const col = parseInt(cellElement.dataset.w);
@@ -1269,15 +1280,12 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             });
         });
 
-
-        // Logic khi trang được tải lại trong trạng thái game đã bắt đầu (Nếu Model.GameStarted=true)
         if (@(Model.GameStarted.ToString().ToLower())) {
             if (startScreen) {
                  startScreen.style.display = 'none';
             }
         }
         
-        // Logic cho Hint/Recurrence Relation
         const hintButton = document.getElementById('hint-button');
         const hintContent = document.getElementById('hint-content');
         const hintIcon = document.getElementById('hint-icon');
@@ -1295,8 +1303,7 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             });
         }
 
-        // HÀM HIỂN THỊ KẾT QUẢ CUỐI CÙNG
-        async function showFinalResults() {
+        async function showFinalResults(message,imgSrc) {
             console.log("currentTakenId",currentTakenId)
             if (!currentTakenId) {
                 console.error("Lỗi: Không tìm thấy Taken ID để hiển thị kết quả cuối cùng.");
@@ -1304,8 +1311,6 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
             }
 
             try {
-                // Gọi API lần cuối để lấy trạng thái game, bao gồm điểm và thời gian còn lại
-                // Giả định API /api/Game/Status/{takenId} trả về timeRemaining và currentScore
                 const response = await fetch(`/api/Game/Status/${currentTakenId}`, {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' }
@@ -1320,10 +1325,10 @@ Nếu W_i &lt;= w (Vật phẩm vừa vẹn):
                 const finalTimeRemaining = result.timeRemaining || 0;
                 const finalScore = result.currentScore || parseInt(scoreElement.textContent) || 0;
 
-                // Tính toán thời gian đã sử dụng
                 let timeUsedSeconds = MAX_DURATION_SECONDS - finalTimeRemaining;
-                if (timeUsedSeconds < 0) timeUsedSeconds = MAX_DURATION_SECONDS; // Đảm bảo không âm
-                // Cập nhật điểm hiển thị lần cuối
+                if (timeUsedSeconds < 0) timeUsedSeconds = MAX_DURATION_SECONDS;
+                finalResultTitle.textContent = message;
+                resultImage.src = imgSrc;
                 scoreElement.textContent = finalScore;
                 optimalValueDisplay.textContent = OPTIMAL_VALUE;
                 finalScoreDisplay.textContent = `${finalScore} điểm`;

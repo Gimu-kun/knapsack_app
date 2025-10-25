@@ -17,7 +17,6 @@ namespace knapsack_app.Controllers
             _jwtTokenService = jwtTokenService;
         }
 
-        // Tạo admin mới
         [HttpPost]
         public async Task<IActionResult> CreateAd([FromForm] AdminCreationReqDto request)
         {
@@ -29,7 +28,6 @@ namespace knapsack_app.Controllers
             return Ok(result.Message);
         }
 
-        // Lấy danh sách tất cả admin
         [HttpGet]
         public async Task<IActionResult> GetAllAdmins()
         {
@@ -37,7 +35,6 @@ namespace knapsack_app.Controllers
             return Ok(admins);
         }
 
-        // Lấy thông tin admin theo id
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAdminById(string id)
         {
@@ -49,7 +46,6 @@ namespace knapsack_app.Controllers
             return Ok(admin);
         }
 
-        // Cập nhật thông tin admin
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAdmin(string id, [FromBody] AdminUpdateReqDto request)
         {
@@ -61,7 +57,6 @@ namespace knapsack_app.Controllers
             return Ok(result.Message);
         }
 
-        // Xóa admin
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAdmin(string id)
         {
